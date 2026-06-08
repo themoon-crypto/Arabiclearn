@@ -1,0 +1,1832 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ArabicLearn ✨</title>
+<link href="https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<style>
+:root {
+  --primary: #1a5f4a;
+  --primary-light: #2d8a6e;
+  --primary-dark: #0d3d2f;
+  --accent: #d4a843;
+  --accent-light: #f0c96a;
+  --bg: #f5f0e8;
+  --bg-card: #ffffff;
+  --bg-sidebar: linear-gradient(180deg, #0d3d2f, #1a5f4a);
+  --text: #2c3e50;
+  --text-light: #6b7c8e;
+  --text-muted: #9aa8b4;
+  --success: #27ae60;
+  --danger: #e74c3c;
+  --warning: #f39c12;
+  --info: #2980b9;
+  --border: #e8e8e8;
+  --shadow: 0 4px 20px rgba(0,0,0,0.08);
+  --shadow-lg: 0 10px 40px rgba(0,0,0,0.12);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --sidebar-width: 260px;
+  --transition: all 0.25s ease;
+}
+[data-theme="dark"] {
+  --bg: #0f1923;
+  --bg-card: #1a2535;
+  --bg-sidebar: linear-gradient(180deg, #060d12, #0f1923);
+  --text: #e8edf2;
+  --text-light: #8fa3b8;
+  --text-muted: #4a6070;
+  --border: #2a3a4a;
+  --shadow: 0 4px 20px rgba(0,0,0,0.3);
+  --shadow-lg: 0 10px 40px rgba(0,0,0,0.4);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: 'Cairo', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; transition: background 0.3s, color 0.3s; }
+.arabic-font { font-family: 'Amiri', serif; }
+
+/* SIDEBAR */
+.sidebar {
+  position: fixed; left: 0; top: 0; width: var(--sidebar-width); height: 100vh;
+  background: var(--bg-sidebar); padding: 20px 12px; z-index: 1000;
+  transition: transform 0.3s ease; overflow-y: auto; display: flex; flex-direction: column;
+}
+.sidebar.collapsed { transform: translateX(-100%); }
+.logo { text-align: center; margin-bottom: 24px; padding-bottom: 18px; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.logo h1 { color: white; font-size: 1.3rem; font-weight: 900; letter-spacing: 1px; }
+.logo .arabic-title { color: var(--accent); font-size: 1.5rem; margin-top: 3px; font-family: 'Amiri', serif; }
+.nav-item {
+  display: flex; align-items: center; gap: 11px; padding: 12px 15px; margin: 3px 0;
+  border-radius: var(--radius-sm); color: rgba(255,255,255,0.8); cursor: pointer;
+  transition: var(--transition); font-size: 0.88rem; font-weight: 600;
+}
+.nav-item:hover, .nav-item.active { background: rgba(255,255,255,0.12); color: white; transform: translateX(4px); }
+.nav-item.active { background: rgba(212,168,67,0.2); border-left: 3px solid var(--accent); color: var(--accent-light); }
+.nav-icon { font-size: 1.15rem; width: 22px; text-align: center; }
+.nav-bottom { margin-top: auto; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); }
+.theme-toggle {
+  display: flex; align-items: center; gap: 10px; padding: 10px 15px;
+  cursor: pointer; color: rgba(255,255,255,0.7); font-size: 0.85rem; font-weight: 600;
+  border-radius: var(--radius-sm); transition: var(--transition);
+}
+.theme-toggle:hover { background: rgba(255,255,255,0.1); color: white; }
+.toggle-switch { width: 38px; height: 20px; background: rgba(255,255,255,0.2); border-radius: 10px; position: relative; margin-left: auto; transition: background 0.3s; }
+.toggle-switch::after { content: ''; position: absolute; width: 16px; height: 16px; background: white; border-radius: 50%; top: 2px; left: 2px; transition: transform 0.3s; }
+[data-theme="dark"] .toggle-switch { background: var(--accent); }
+[data-theme="dark"] .toggle-switch::after { transform: translateX(18px); }
+
+/* MAIN */
+.main-content { margin-left: var(--sidebar-width); padding: 25px 30px; min-height: 100vh; transition: margin-left 0.3s ease; }
+.main-content.expanded { margin-left: 0; }
+.mobile-header { display: none; align-items: center; gap: 12px; margin-bottom: 20px; background: var(--bg-card); padding: 12px 16px; border-radius: var(--radius); box-shadow: var(--shadow); }
+.menu-toggle { background: var(--primary); color: white; border: none; width: 40px; height: 40px; border-radius: 10px; font-size: 1.2rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.page { display: none; animation: fadeIn 0.3s ease; }
+.page.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* HEADER BAR */
+.header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 12px; }
+.page-title { font-size: 1.7rem; font-weight: 900; color: var(--primary-dark); }
+[data-theme="dark"] .page-title { color: var(--accent-light); }
+
+/* STATS */
+.stats-row { display: flex; gap: 12px; flex-wrap: wrap; }
+.stat-card {
+  background: var(--bg-card); padding: 12px 18px; border-radius: var(--radius-sm);
+  box-shadow: var(--shadow); display: flex; align-items: center; gap: 10px; min-width: 130px;
+  transition: var(--transition); border: 1px solid var(--border);
+}
+.stat-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+.stat-icon { width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; }
+.stat-icon.blue { background: #e3f2fd; } .stat-icon.green { background: #e8f5e9; }
+.stat-icon.orange { background: #fff3e0; } .stat-icon.purple { background: #f3e5f5; }
+.stat-info h4 { font-size: 1.3rem; font-weight: 900; color: var(--text); }
+.stat-info p { font-size: 0.72rem; color: var(--text-light); font-weight: 600; }
+
+/* CARDS */
+.card {
+  background: var(--bg-card); border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 22px; margin-bottom: 22px; border: 1px solid var(--border); transition: var(--transition);
+}
+.card:hover { box-shadow: var(--shadow-lg); }
+.card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; flex-wrap: wrap; gap: 10px; }
+.card-title { font-size: 1.1rem; font-weight: 700; color: var(--primary-dark); }
+[data-theme="dark"] .card-title { color: var(--accent-light); }
+
+/* BUTTONS */
+.btn { padding: 10px 20px; border: none; border-radius: var(--radius-sm); font-family: 'Cairo', sans-serif; font-size: 0.88rem; font-weight: 700; cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; gap: 7px; }
+.btn-primary { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; box-shadow: 0 4px 15px rgba(26,95,74,0.3); }
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(26,95,74,0.4); }
+.btn-secondary { background: var(--bg); color: var(--text); border: 2px solid var(--border); }
+.btn-secondary:hover { border-color: var(--primary); color: var(--primary); }
+.btn-danger { background: var(--danger); color: white; }
+.btn-warning { background: var(--warning); color: white; }
+.btn-info { background: var(--info); color: white; }
+.btn-accent { background: linear-gradient(135deg, var(--accent), var(--accent-light)); color: #2c1800; font-weight: 800; }
+.btn-sm { padding: 6px 13px; font-size: 0.78rem; }
+.btn-icon { width: 34px; height: 34px; padding: 0; border-radius: 9px; justify-content: center; font-size: 0.95rem; }
+
+/* FORMS */
+.form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
+.form-group { display: flex; flex-direction: column; gap: 5px; }
+.form-label { font-size: 0.82rem; font-weight: 700; color: var(--text); }
+.form-input, .form-select, .form-textarea {
+  padding: 10px 14px; border: 2px solid var(--border); border-radius: var(--radius-sm);
+  font-family: 'Cairo', 'Amiri', sans-serif; font-size: 0.92rem; transition: var(--transition);
+  background: var(--bg-card); color: var(--text);
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 3px rgba(26,95,74,0.1); }
+.form-textarea { min-height: 90px; resize: vertical; }
+.arabic-input { font-family: 'Amiri', serif; font-size: 1.15rem; direction: rtl; text-align: right; }
+
+/* TABLE */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th { background: var(--primary); color: white; padding: 12px 14px; text-align: left; font-weight: 700; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; }
+.data-table th:first-child { border-radius: var(--radius-sm) 0 0 0; } .data-table th:last-child { border-radius: 0 var(--radius-sm) 0 0; }
+.data-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 0.88rem; color: var(--text); }
+.data-table tr:hover td { background: rgba(26,95,74,0.04); }
+.data-table .arabic-cell { font-family: 'Amiri', serif; font-size: 1.1rem; direction: rtl; }
+.badge { padding: 3px 10px; border-radius: 20px; font-size: 0.72rem; font-weight: 700; }
+.badge-beginner { background: #e8f5e9; color: #1b7340; }
+.badge-intermediate { background: #fff3e0; color: #b56a00; }
+.badge-advanced { background: #fce4ec; color: #c2185b; }
+
+/* QUIZ */
+.quiz-container { max-width: 680px; margin: 0 auto; }
+.quiz-card {
+  background: var(--bg-card); border-radius: var(--radius); box-shadow: var(--shadow-lg);
+  padding: 35px; text-align: center; min-height: 380px; display: flex; flex-direction: column;
+  justify-content: center; position: relative; overflow: hidden; border: 1px solid var(--border);
+}
+.quiz-progress { position: absolute; top: 0; left: 0; right: 0; height: 5px; background: var(--border); }
+.quiz-progress-bar { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); transition: width 0.4s ease; border-radius: 0 3px 3px 0; }
+.quiz-question { font-size: 2rem; font-family: 'Amiri', serif; margin-bottom: 8px; color: var(--primary-dark); }
+[data-theme="dark"] .quiz-question { color: var(--accent-light); }
+.quiz-hint { color: var(--text-light); font-size: 0.85rem; margin-bottom: 25px; }
+.quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 18px; }
+.quiz-option {
+  padding: 15px 18px; border: 2px solid var(--border); border-radius: var(--radius-sm);
+  cursor: pointer; transition: var(--transition); font-size: 0.95rem;
+  background: var(--bg-card); color: var(--text); font-family: 'Cairo', sans-serif; font-weight: 600;
+}
+.quiz-option:hover { border-color: var(--primary); background: rgba(26,95,74,0.06); transform: translateY(-2px); }
+.quiz-option.correct { border-color: var(--success); background: #e8f5e9; color: var(--success); }
+.quiz-option.wrong { border-color: var(--danger); background: #ffebee; color: var(--danger); }
+.quiz-feedback { margin-top: 20px; padding: 12px; border-radius: var(--radius-sm); font-weight: 700; display: none; }
+.quiz-feedback.show { display: block; }
+.quiz-feedback.correct { background: #e8f5e9; color: var(--success); }
+.quiz-feedback.wrong { background: #ffebee; color: var(--danger); }
+.quiz-score { font-size: 3.5rem; font-weight: 900; color: var(--primary); margin: 15px 0; }
+[data-theme="dark"] .quiz-score { color: var(--accent-light); }
+
+/* FLASHCARDS */
+.flashcard-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
+.flashcard {
+  background: var(--bg-card); border-radius: var(--radius); box-shadow: var(--shadow);
+  padding: 22px; cursor: pointer; transition: var(--transition); position: relative;
+  min-height: 170px; display: flex; flex-direction: column; justify-content: center;
+  align-items: center; text-align: center; border: 2px solid var(--border);
+  perspective: 1000px;
+}
+.flashcard:hover { transform: translateY(-4px); box-shadow: var(--shadow-lg); border-color: var(--primary-light); }
+.flashcard-front .arabic-word { font-family: 'Amiri', serif; font-size: 1.9rem; color: var(--primary-dark); margin-bottom: 8px; }
+[data-theme="dark"] .flashcard-front .arabic-word { color: var(--accent-light); }
+.flashcard-front .transliteration { color: var(--text-light); font-size: 0.85rem; font-style: italic; }
+.flashcard-back { display: none; }
+.flashcard.flipped .flashcard-front { display: none; }
+.flashcard.flipped .flashcard-back { display: flex; flex-direction: column; }
+.flashcard-back .translation { font-size: 1.2rem; font-weight: 700; color: var(--primary); margin-bottom: 6px; }
+.flashcard-back .translation-en { font-size: 0.95rem; color: var(--text-light); }
+.flashcard-actions { position: absolute; top: 8px; right: 8px; display: flex; gap: 4px; }
+.fc-btn { width: 30px; height: 30px; border: none; border-radius: 7px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; transition: var(--transition); }
+.fc-btn.speak { background: #e3f2fd; color: #1976d2; }
+.fc-btn.speak:hover { background: #1976d2; color: white; }
+.fc-btn.delete { background: #ffebee; color: var(--danger); }
+.fc-btn.delete:hover { background: var(--danger); color: white; }
+
+/* ARABIC KEYBOARD */
+.arabic-keyboard { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 10px; margin-top: 8px; }
+.keyboard-row { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 4px; justify-content: center; }
+.key-btn {
+  min-width: 34px; height: 34px; padding: 0 6px; border: 1px solid var(--border); border-radius: 6px;
+  background: var(--bg); color: var(--text); font-family: 'Amiri', serif; font-size: 1.1rem;
+  cursor: pointer; transition: var(--transition); display: flex; align-items: center; justify-content: center;
+}
+.key-btn:hover { background: var(--primary); color: white; border-color: var(--primary); }
+.key-btn.key-special { font-family: 'Cairo', sans-serif; font-size: 0.75rem; min-width: 55px; background: var(--bg-card); }
+.key-btn.key-space { min-width: 100px; }
+
+/* SRS */
+.srs-card { text-align: center; }
+.srs-word { font-family: 'Amiri', serif; font-size: 2.5rem; color: var(--primary-dark); margin: 20px 0 10px; direction: rtl; }
+[data-theme="dark"] .srs-word { color: var(--accent-light); }
+.srs-reveal-btn { margin: 20px auto; display: block; }
+.srs-buttons { display: flex; gap: 12px; justify-content: center; margin-top: 20px; flex-wrap: wrap; }
+.srs-btn { padding: 12px 20px; border-radius: var(--radius-sm); border: none; cursor: pointer; font-family: 'Cairo', sans-serif; font-weight: 700; font-size: 0.88rem; transition: var(--transition); }
+.srs-btn:hover { transform: translateY(-2px); }
+.srs-btn.again { background: #ffebee; color: var(--danger); }
+.srs-btn.hard { background: #fff3e0; color: var(--warning); }
+.srs-btn.good { background: #e8f5e9; color: var(--success); }
+.srs-btn.easy { background: #e3f2fd; color: var(--info); }
+.srs-interval { font-size: 0.7rem; display: block; margin-top: 2px; opacity: 0.7; }
+
+/* GOAL */
+.goal-bar-wrap { background: var(--border); border-radius: 20px; height: 10px; overflow: hidden; margin: 8px 0; }
+.goal-bar { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 20px; transition: width 0.5s ease; }
+.goal-info { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-light); font-weight: 600; }
+
+/* STATS PAGE */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 22px; }
+.stats-big-card { background: var(--bg-card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 20px; text-align: center; border: 1px solid var(--border); }
+.stats-big-num { font-size: 2.5rem; font-weight: 900; color: var(--primary); }
+[data-theme="dark"] .stats-big-num { color: var(--accent-light); }
+.stats-big-label { font-size: 0.82rem; color: var(--text-light); font-weight: 600; margin-top: 4px; }
+.chart-bar-wrap { display: flex; flex-direction: column; gap: 10px; }
+.chart-bar-row { display: flex; align-items: center; gap: 10px; }
+.chart-bar-label { width: 90px; font-size: 0.8rem; color: var(--text-light); font-weight: 600; text-align: right; }
+.chart-bar-bg { flex: 1; background: var(--border); border-radius: 20px; height: 18px; overflow: hidden; }
+.chart-bar-fill { height: 100%; border-radius: 20px; transition: width 0.6s ease; }
+.chart-bar-val { width: 40px; font-size: 0.8rem; font-weight: 700; color: var(--text); }
+
+/* EMPTY STATE */
+.empty-state { text-align: center; padding: 50px 20px; color: var(--text-light); }
+.empty-state-icon { font-size: 3.5rem; margin-bottom: 16px; opacity: 0.5; }
+.empty-state h3 { font-size: 1.2rem; margin-bottom: 8px; color: var(--text); font-weight: 700; }
+
+/* MODALS */
+.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 2000; display: none; align-items: center; justify-content: center; padding: 16px; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--bg-card); border-radius: var(--radius); box-shadow: var(--shadow-lg); width: 100%; max-width: 580px; max-height: 90vh; overflow-y: auto; animation: modalIn 0.25s ease; border: 1px solid var(--border); }
+@keyframes modalIn { from { opacity: 0; transform: scale(0.93) translateY(16px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+.modal-header { padding: 20px 25px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.modal-title { font-size: 1.2rem; font-weight: 800; color: var(--primary-dark); }
+[data-theme="dark"] .modal-title { color: var(--accent-light); }
+.modal-close { background: none; border: none; font-size: 1.4rem; cursor: pointer; color: var(--text-light); width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: var(--transition); }
+.modal-close:hover { background: #ffebee; color: var(--danger); }
+.modal-body { padding: 22px 25px; }
+.modal-footer { padding: 16px 25px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+
+/* TOOLBAR */
+.toolbar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
+.search-box { flex: 1; min-width: 220px; position: relative; }
+.search-box input { width: 100%; padding: 10px 14px 10px 40px; border: 2px solid var(--border); border-radius: var(--radius-sm); font-family: 'Cairo', sans-serif; font-size: 0.88rem; transition: var(--transition); background: var(--bg-card); color: var(--text); }
+.search-box input:focus { outline: none; border-color: var(--primary); }
+.search-box::before { content: '🔍'; position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: 0.9rem; }
+
+/* TOAST */
+.toast-container { position: fixed; top: 20px; right: 20px; z-index: 3000; display: flex; flex-direction: column; gap: 8px; }
+.toast { background: var(--bg-card); border-radius: var(--radius-sm); box-shadow: var(--shadow-lg); padding: 13px 18px; display: flex; align-items: center; gap: 10px; animation: toastIn 0.3s ease; min-width: 270px; border-left: 4px solid var(--primary); border: 1px solid var(--border); border-left: 4px solid var(--primary); }
+.toast.success { border-left-color: var(--success); }
+.toast.error { border-left-color: var(--danger); }
+.toast.warning { border-left-color: var(--warning); }
+@keyframes toastIn { from { opacity: 0; transform: translateX(40px); } to { opacity: 1; transform: translateX(0); } }
+
+/* DASHBOARD GRID */
+.dashboard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 20px; margin-bottom: 25px; }
+.dashboard-card { background: var(--bg-card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 22px; transition: var(--transition); cursor: pointer; border: 1px solid var(--border); }
+.dashboard-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: var(--primary-light); }
+.dashboard-card-icon { width: 46px; height: 46px; border-radius: 13px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: 13px; }
+.dashboard-card h3 { font-size: 1rem; font-weight: 700; margin-bottom: 6px; color: var(--text); }
+.dashboard-card p { font-size: 0.82rem; color: var(--text-light); line-height: 1.5; }
+
+/* LESSON */
+.lesson-list { display: flex; flex-direction: column; gap: 12px; }
+.lesson-item { background: var(--bg-card); border-radius: var(--radius); box-shadow: var(--shadow); padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: var(--transition); border: 2px solid transparent; }
+.lesson-item:hover { border-color: var(--primary-light); transform: translateX(4px); }
+.lesson-info h4 { font-size: 1rem; font-weight: 700; color: var(--primary-dark); margin-bottom: 4px; }
+[data-theme="dark"] .lesson-info h4 { color: var(--accent-light); }
+.lesson-info p { font-size: 0.82rem; color: var(--text-light); }
+.lesson-meta { display: flex; align-items: center; gap: 12px; }
+.lesson-actions { display: flex; gap: 6px; }
+
+/* AI GENERATE */
+.ai-loading { display: flex; align-items: center; gap: 10px; color: var(--primary); font-weight: 700; }
+.ai-spinner { width: 20px; height: 20px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ACTIVITY */
+.activity-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.activity-item:last-child { border-bottom: none; }
+.activity-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }
+.activity-text { flex: 1; }
+.activity-text strong { font-size: 0.88rem; color: var(--text); font-weight: 700; }
+.activity-text span { display: block; font-size: 0.76rem; color: var(--text-light); }
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(-100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main-content { margin-left: 0; padding: 12px; }
+  .mobile-header { display: flex; }
+  .quiz-options { grid-template-columns: 1fr; }
+  .flashcard-grid { grid-template-columns: 1fr; }
+  .header-bar { flex-direction: column; align-items: flex-start; }
+  .stats-row { width: 100%; }
+  .stat-card { flex: 1; min-width: auto; }
+}
+.hidden { display: none !important; }
+.overlay-close { position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 999; display: none; }
+.overlay-close.show { display: block; }
+
+/* WORD DETAIL */
+.word-detail-arabic { font-family: 'Amiri', serif; font-size: 3rem; direction: rtl; text-align: center; color: var(--primary-dark); padding: 20px; background: rgba(26,95,74,0.05); border-radius: var(--radius); margin-bottom: 15px; }
+[data-theme="dark"] .word-detail-arabic { color: var(--accent-light); background: rgba(212,168,67,0.07); }
+
+/* PROGRESS RING */
+.progress-ring-wrap { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.progress-ring { transform: rotate(-90deg); }
+.progress-ring-bg { fill: none; stroke: var(--border); stroke-width: 8; }
+.progress-ring-fill { fill: none; stroke: var(--primary); stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
+.progress-ring-text { font-size: 0.85rem; font-weight: 700; color: var(--text-light); }
+</style>
+</head>
+<body>
+
+<div class="toast-container" id="toastContainer"></div>
+<div class="overlay-close" id="overlayClose" onclick="closeSidebarOverlay()"></div>
+
+<nav class="sidebar" id="sidebar">
+  <div class="logo">
+    <h1>ArabicLearn</h1>
+    <div class="arabic-title">تعلم العربية</div>
+  </div>
+  <div class="nav-item active" data-page="dashboard" onclick="navigateTo('dashboard')"><span class="nav-icon">📊</span><span>Tableau de bord</span></div>
+  <div class="nav-item" data-page="vocabulary" onclick="navigateTo('vocabulary')"><span class="nav-icon">📖</span><span>Vocabulaire</span></div>
+  <div class="nav-item" data-page="lessons" onclick="navigateTo('lessons')"><span class="nav-icon">📚</span><span>Leçons</span></div>
+  <div class="nav-item" data-page="flashcards" onclick="navigateTo('flashcards')"><span class="nav-icon">🎴</span><span>Flashcards</span></div>
+  <div class="nav-item" data-page="srs" onclick="navigateTo('srs')"><span class="nav-icon">🔁</span><span>Répétition espacée</span></div>
+  <div class="nav-item" data-page="quiz" onclick="navigateTo('quiz')"><span class="nav-icon">🎯</span><span>Quiz</span></div>
+  <div class="nav-item" data-page="stats" onclick="navigateTo('stats')"><span class="nav-icon">📈</span><span>Statistiques</span></div>
+  <div class="nav-item" data-page="settings" onclick="navigateTo('settings')"><span class="nav-icon">⚙️</span><span>Paramètres</span></div>
+  <div class="nav-bottom">
+    <div class="theme-toggle" onclick="toggleTheme()">
+      <span>🌙</span><span>Mode sombre</span>
+      <div class="toggle-switch"></div>
+    </div>
+  </div>
+</nav>
+
+<main class="main-content" id="mainContent">
+  <div class="mobile-header">
+    <button class="menu-toggle" onclick="openSidebar()">☰</button>
+    <h2 style="font-weight:900;color:var(--primary-dark);font-size:1.1rem;">ArabicLearn</h2>
+    <div style="margin-left:auto;font-family:'Amiri',serif;font-size:1.2rem;color:var(--accent);">تعلم العربية</div>
+  </div>
+
+  <!-- DASHBOARD -->
+  <div id="page-dashboard" class="page active">
+    <div class="header-bar">
+      <h1 class="page-title">Tableau de bord</h1>
+      <div class="stats-row">
+        <div class="stat-card"><div class="stat-icon blue">📖</div><div class="stat-info"><h4 id="statWords">0</h4><p>Mots</p></div></div>
+        <div class="stat-card"><div class="stat-icon green">📚</div><div class="stat-info"><h4 id="statLessons">0</h4><p>Leçons</p></div></div>
+        <div class="stat-card"><div class="stat-icon orange">🎯</div><div class="stat-info"><h4 id="statQuizzes">0</h4><p>Quiz faits</p></div></div>
+        <div class="stat-card"><div class="stat-icon purple">🔥</div><div class="stat-info"><h4 id="statStreak">0</h4><p>Jours consécutifs</p></div></div>
+      </div>
+    </div>
+
+    <!-- DAILY GOAL -->
+    <div class="card" id="dailyGoalCard">
+      <div class="card-header">
+        <h3 class="card-title">🎯 Objectif du jour</h3>
+        <button class="btn btn-sm btn-secondary" onclick="openGoalModal()">Modifier</button>
+      </div>
+      <div id="goalContent"></div>
+    </div>
+
+    <div class="dashboard-grid">
+      <div class="dashboard-card" onclick="navigateTo('vocabulary')"><div class="dashboard-card-icon" style="background:#e3f2fd;">📖</div><h3>Ajouter des mots</h3><p>Crée ta liste de vocabulaire arabe avec traductions.</p></div>
+      <div class="dashboard-card" onclick="navigateTo('srs')"><div class="dashboard-card-icon" style="background:#e8f5e9;">🔁</div><h3>Répétition espacée</h3><p>Mémorise avec l'algorithme SRS, comme Anki.</p></div>
+      <div class="dashboard-card" onclick="navigateTo('quiz')"><div class="dashboard-card-icon" style="background:#fff3e0;">🎯</div><h3>Faire un quiz</h3><p>Teste tes connaissances avec des quiz auto.</p></div>
+      <div class="dashboard-card" onclick="navigateTo('stats')"><div class="dashboard-card-icon" style="background:#f3e5f5;">📈</div><h3>Statistiques</h3><p>Suis ta progression détaillée.</p></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3 class="card-title">Activité récente</h3></div>
+      <div id="recentActivity"><div class="empty-state"><div class="empty-state-icon">📋</div><h3>Aucune activité</h3><p>Commence à apprendre !</p></div></div>
+    </div>
+  </div>
+
+  <!-- VOCABULARY -->
+  <div id="page-vocabulary" class="page">
+    <div class="header-bar">
+      <h1 class="page-title">Vocabulaire</h1>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-accent" onclick="openAIGenerateModal()">🤖 Générer par IA</button>
+        <button class="btn btn-primary" onclick="openAddWordModal()">+ Ajouter un mot</button>
+      </div>
+    </div>
+    <div class="toolbar">
+      <div class="search-box"><input type="text" id="wordSearch" placeholder="Rechercher..." oninput="filterWords()"></div>
+      <select class="form-select" id="wordFilterLevel" onchange="filterWords()" style="width:150px;">
+        <option value="">Tous niveaux</option>
+        <option value="beginner">Débutant</option>
+        <option value="intermediate">Intermédiaire</option>
+        <option value="advanced">Avancé</option>
+      </select>
+      <select class="form-select" id="wordFilterCategory" onchange="filterWords()" style="width:160px;"><option value="">Toutes catégories</option></select>
+    </div>
+    <div class="card">
+      <div id="vocabularyTableContainer"></div>
+    </div>
+  </div>
+
+  <!-- LESSONS -->
+  <div id="page-lessons" class="page">
+    <div class="header-bar">
+      <h1 class="page-title">Leçons</h1>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-accent" onclick="openAILessonModal()">🤖 Générer par IA</button>
+        <button class="btn btn-primary" onclick="openAddLessonModal()">+ Ajouter</button>
+      </div>
+    </div>
+    <div class="toolbar">
+      <div class="search-box"><input type="text" id="lessonSearch" placeholder="Rechercher..." oninput="filterLessons()"></div>
+    </div>
+    <div id="lessonsList" class="lesson-list"></div>
+  </div>
+
+  <!-- FLASHCARDS -->
+  <div id="page-flashcards" class="page">
+    <div class="header-bar">
+      <h1 class="page-title">Flashcards</h1>
+      <div style="display:flex;gap:8px;">
+        <select class="form-select" id="flashcardFilter" onchange="renderFlashcards()" style="width:160px;"><option value="">Tous les mots</option></select>
+        <button class="btn btn-secondary" onclick="shuffleFlashcards()">🔀 Mélanger</button>
+      </div>
+    </div>
+    <div id="flashcardsContainer" class="flashcard-grid"></div>
+  </div>
+
+  <!-- SRS -->
+  <div id="page-srs" class="page">
+    <div class="header-bar">
+      <h1 class="page-title">Répétition Espacée</h1>
+      <div id="srsDueCount" style="font-size:0.9rem;color:var(--text-light);font-weight:700;"></div>
+    </div>
+    <div id="srsContent"></div>
+  </div>
+
+  <!-- QUIZ -->
+  <div id="page-quiz" class="page">
+    <div class="header-bar"><h1 class="page-title">Quiz</h1></div>
+    <div id="quizSetup" class="card" style="max-width:580px;margin:0 auto;">
+      <h3 class="card-title">⚙️ Configuration</h3>
+      <p style="color:var(--text-light);margin-bottom:18px;font-size:0.88rem;">Choisis tes options et lance le quiz !</p>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label">Type</label>
+          <select class="form-select" id="quizType">
+            <option value="translation">Arabe → Français</option>
+            <option value="reverse">Français → Arabe</option>
+            <option value="listening">Écoute → Texte</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Catégorie</label>
+          <select class="form-select" id="quizCategory"><option value="">Toutes</option></select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Questions</label>
+          <select class="form-select" id="quizCount">
+            <option value="5">5</option><option value="10" selected>10</option>
+            <option value="20">20</option><option value="30">30</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Niveau</label>
+          <select class="form-select" id="quizLevel">
+            <option value="">Tous</option>
+            <option value="beginner">Débutant</option>
+            <option value="intermediate">Intermédiaire</option>
+            <option value="advanced">Avancé</option>
+          </select>
+        </div>
+      </div>
+      <div style="text-align:center;margin-top:22px;">
+        <button class="btn btn-primary" style="font-size:1rem;padding:13px 35px;" onclick="startQuiz()">▶️ Commencer</button>
+      </div>
+    </div>
+    <div id="quizGame" class="quiz-container hidden">
+      <div class="quiz-card">
+        <div class="quiz-progress"><div class="quiz-progress-bar" id="quizProgressBar"></div></div>
+        <div id="quizContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div id="page-stats" class="page">
+    <div class="header-bar"><h1 class="page-title">Statistiques</h1></div>
+    <div id="statsContent"></div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="page-settings" class="page">
+    <div class="header-bar"><h1 class="page-title">Paramètres</h1></div>
+    <div class="card">
+      <h3 class="card-title">🎯 Objectif journalier</h3>
+      <p style="color:var(--text-light);font-size:0.85rem;margin-bottom:15px;">Définis combien de mots tu veux apprendre chaque jour.</p>
+      <div style="display:flex;gap:10px;align-items:center;">
+        <input type="number" class="form-input" id="dailyGoalInput" min="1" max="100" style="width:100px;" value="10">
+        <span style="color:var(--text-light);font-size:0.88rem;">mots par jour</span>
+        <button class="btn btn-primary btn-sm" onclick="saveGoal()">Enregistrer</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">💾 Données</h3>
+      <p style="color:var(--text-light);font-size:0.85rem;margin-bottom:15px;">Exporte ou importe tes données (sauvegarde locale).</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <button class="btn btn-primary" onclick="exportData()">📤 Exporter</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('importFile').click()">📥 Importer</button>
+        <input type="file" id="importFile" accept=".json" style="display:none;" onchange="importData(event)">
+        <button class="btn btn-danger" onclick="resetData()">🗑️ Réinitialiser</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">🔊 Test Audio</h3>
+      <p style="color:var(--text-light);font-size:0.85rem;margin-bottom:15px;">Teste la synthèse vocale arabe sur ton appareil.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <button class="btn btn-primary" onclick="testAudio()">▶️ Tester مرحبا</button>
+        <button class="btn btn-secondary" onclick="listVoices()">📋 Voir les voix</button>
+      </div>
+      <div id="audioTestResult" style="margin-top:12px;font-size:0.82rem;color:var(--text-light);"></div>
+    </div>
+    <div class="card">
+      <h3 class="card-title">ℹ️ À propos</h3>
+      <p style="color:var(--text-light);font-size:0.85rem;line-height:1.8;">
+        <strong>ArabicLearn v2.0</strong> — Application d'apprentissage de l'arabe.<br>
+        Fonctionnalités : Vocabulaire, Leçons, Flashcards, SRS, Quiz, Stats, IA, Mode sombre.<br>
+        Données stockées localement sur ton appareil.
+      </p>
+    </div>
+  </div>
+</main>
+
+<!-- MODAL: ADD WORD -->
+<div class="modal-overlay" id="addWordModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">➕ Ajouter un mot</h3>
+      <button class="modal-close" onclick="closeModal('addWordModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group" style="grid-column:1/-1;">
+          <label class="form-label">Mot en arabe *</label>
+          <input type="text" class="form-input arabic-input" id="wordArabic" placeholder="أكتب الكلمة هنا">
+          <div id="arabicKeyboard1"></div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Traduction français *</label>
+          <input type="text" class="form-input" id="wordFrench" placeholder="Traduction français">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Traduction anglais</label>
+          <input type="text" class="form-input" id="wordEnglish" placeholder="English translation">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Translittération</label>
+          <input type="text" class="form-input" id="wordTransliteration" placeholder="Ex: marhaban">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Catégorie</label>
+          <input type="text" class="form-input" id="wordCategory" list="categoryList" placeholder="Ex: Salutations">
+          <datalist id="categoryList"></datalist>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Niveau</label>
+          <select class="form-select" id="wordLevel">
+            <option value="beginner">Débutant</option>
+            <option value="intermediate">Intermédiaire</option>
+            <option value="advanced">Avancé</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label class="form-label">Exemple (arabe)</label>
+          <textarea class="form-textarea arabic-input" id="wordExample" placeholder="جملة مثال..."></textarea>
+        </div>
+        <div class="form-group" style="grid-column:1/-1;">
+          <label class="form-label">Traduction de l'exemple</label>
+          <textarea class="form-textarea" id="wordExampleTranslation" placeholder="Traduction de la phrase..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('addWordModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveWord()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: EDIT WORD -->
+<div class="modal-overlay" id="editWordModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">✏️ Modifier le mot</h3>
+      <button class="modal-close" onclick="closeModal('editWordModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editWordId">
+      <div class="form-grid">
+        <div class="form-group" style="grid-column:1/-1;">
+          <label class="form-label">Mot en arabe *</label>
+          <input type="text" class="form-input arabic-input" id="editWordArabic">
+        </div>
+        <div class="form-group"><label class="form-label">Français *</label><input type="text" class="form-input" id="editWordFrench"></div>
+        <div class="form-group"><label class="form-label">Anglais</label><input type="text" class="form-input" id="editWordEnglish"></div>
+        <div class="form-group"><label class="form-label">Translittération</label><input type="text" class="form-input" id="editWordTransliteration"></div>
+        <div class="form-group"><label class="form-label">Catégorie</label><input type="text" class="form-input" id="editWordCategory"></div>
+        <div class="form-group">
+          <label class="form-label">Niveau</label>
+          <select class="form-select" id="editWordLevel">
+            <option value="beginner">Débutant</option><option value="intermediate">Intermédiaire</option><option value="advanced">Avancé</option>
+          </select>
+        </div>
+        <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Exemple (arabe)</label><textarea class="form-textarea arabic-input" id="editWordExample"></textarea></div>
+        <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Traduction exemple</label><textarea class="form-textarea" id="editWordExampleTranslation"></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('editWordModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="updateWord()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: ADD LESSON -->
+<div class="modal-overlay" id="addLessonModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">➕ Ajouter une leçon</h3>
+      <button class="modal-close" onclick="closeModal('addLessonModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Titre *</label><input type="text" class="form-input" id="lessonTitle" placeholder="Titre de la leçon"></div>
+        <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Description</label><textarea class="form-textarea" id="lessonDescription" placeholder="Description..."></textarea></div>
+        <div class="form-group"><label class="form-label">Niveau</label><select class="form-select" id="lessonLevel"><option value="beginner">Débutant</option><option value="intermediate">Intermédiaire</option><option value="advanced">Avancé</option></select></div>
+        <div class="form-group"><label class="form-label">Catégorie</label><input type="text" class="form-input" id="lessonCategory" placeholder="Catégorie"></div>
+        <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Contenu arabe *</label><textarea class="form-textarea arabic-input" id="lessonContent" rows="5" placeholder="أكتب المحتوى..."></textarea></div>
+        <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Traduction français</label><textarea class="form-textarea" id="lessonTranslationFr" rows="3" placeholder="Traduction..."></textarea></div>
+        <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Traduction anglais</label><textarea class="form-textarea" id="lessonTranslationEn" rows="3" placeholder="Translation..."></textarea></div>
+        <div class="form-group" style="grid-column:1/-1;"><label class="form-label">Notes / Grammaire</label><textarea class="form-textarea" id="lessonNotes" rows="3" placeholder="Notes..."></textarea></div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('addLessonModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveLesson()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: VIEW LESSON -->
+<div class="modal-overlay" id="viewLessonModal">
+  <div class="modal" style="max-width:750px;">
+    <div class="modal-header">
+      <h3 class="modal-title" id="viewLessonTitle"></h3>
+      <button class="modal-close" onclick="closeModal('viewLessonModal')">&times;</button>
+    </div>
+    <div class="modal-body" id="viewLessonBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('viewLessonModal')">Fermer</button>
+      <button class="btn btn-info" onclick="speakText(currentLessonArabic)">🔊 Écouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: AI GENERATE WORDS -->
+<div class="modal-overlay" id="aiGenerateModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">🤖 Générer des mots par IA</h3>
+      <button class="modal-close" onclick="closeModal('aiGenerateModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group" style="grid-column:1/-1;">
+          <label class="form-label">Thème / Catégorie</label>
+          <input type="text" class="form-input" id="aiTheme" placeholder="Ex: Nourriture, Animaux, Famille...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nombre de mots</label>
+          <select class="form-select" id="aiCount">
+            <option value="5">5</option><option value="10" selected>10</option><option value="15">15</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Niveau</label>
+          <select class="form-select" id="aiLevel">
+            <option value="beginner">Débutant</option><option value="intermediate">Intermédiaire</option><option value="advanced">Avancé</option>
+          </select>
+        </div>
+      </div>
+      <div id="aiResult" style="margin-top:15px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('aiGenerateModal')">Annuler</button>
+      <button class="btn btn-accent" onclick="generateWordsWithAI()" id="aiGenerateBtn">🤖 Générer</button>
+      <button class="btn btn-primary hidden" onclick="importAIWords()" id="aiImportBtn">✅ Importer tous</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: AI LESSON -->
+<div class="modal-overlay" id="aiLessonModal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 class="modal-title">🤖 Générer une leçon par IA</h3>
+      <button class="modal-close" onclick="closeModal('aiLessonModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-grid">
+        <div class="form-group" style="grid-column:1/-1;">
+          <label class="form-label">Sujet de la leçon</label>
+          <input type="text" class="form-input" id="aiLessonTopic" placeholder="Ex: Les salutations, Les chiffres, La famille...">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Niveau</label>
+          <select class="form-select" id="aiLessonLevel">
+            <option value="débutant">Débutant</option><option value="intermédiaire">Intermédiaire</option><option value="avancé">Avancé</option>
+          </select>
+        </div>
+      </div>
+      <div id="aiLessonResult" style="margin-top:15px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('aiLessonModal')">Annuler</button>
+      <button class="btn btn-accent" onclick="generateLessonWithAI()" id="aiLessonBtn">🤖 Générer</button>
+      <button class="btn btn-primary hidden" onclick="importAILesson()" id="aiLessonImportBtn">✅ Importer la leçon</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: GOAL -->
+<div class="modal-overlay" id="goalModal">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header">
+      <h3 class="modal-title">🎯 Objectif journalier</h3>
+      <button class="modal-close" onclick="closeModal('goalModal')">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label class="form-label">Nombre de mots à apprendre par jour</label>
+        <input type="number" class="form-input" id="goalModalInput" min="1" max="100" value="10">
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('goalModal')">Annuler</button>
+      <button class="btn btn-primary" onclick="saveGoalFromModal()">💾 Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== DATA ====================
+let appData = {
+  words: [],
+  lessons: [],
+  stats: { quizzesTaken: 0, correctAnswers: 0, totalAnswers: 0, streak: 0, lastStudyDate: null, dailyWords: {}, activity: [] },
+  settings: { dailyGoal: 10 },
+  srs: {} // wordId -> { interval, easeFactor, nextReview, repetitions }
+};
+let currentQuiz = null, currentQuizIndex = 0, currentQuizScore = 0;
+let currentSRSWord = null, currentLessonArabic = '';
+let aiGeneratedWords = [], aiGeneratedLesson = null;
+
+// ==================== INIT ====================
+window.addEventListener('DOMContentLoaded', () => {
+  loadData();
+  loadTheme();
+  renderKeyboard('arabicKeyboard1', 'wordArabic');
+  document.querySelectorAll('.modal-overlay').forEach(m => {
+    m.addEventListener('click', e => { if (e.target === m) closeModal(m.id); });
+  });
+});
+
+function getDemoWords() {
+  return [
+    {id:1,arabic:'مرحبا',french:'Bonjour',english:'Hello',transliteration:'marhaban',category:'Salutations',level:'beginner'},
+    {id:2,arabic:'شكرا',french:'Merci',english:'Thank you',transliteration:'shukran',category:'Salutations',level:'beginner'},
+    {id:3,arabic:'صباح الخير',french:'Bonjour (matin)',english:'Good morning',transliteration:'sabah al-khayr',category:'Salutations',level:'beginner'},
+    {id:4,arabic:'مساء الخير',french:'Bonsoir',english:'Good evening',transliteration:'masa al-khayr',category:'Salutations',level:'beginner'},
+    {id:5,arabic:'مع السلامة',french:'Au revoir',english:'Goodbye',transliteration:'maa as-salama',category:'Salutations',level:'beginner'},
+    {id:6,arabic:'عفوا',french:'De rien',english:'You\'re welcome',transliteration:'afwan',category:'Salutations',level:'beginner'},
+    {id:7,arabic:'أهلا وسهلا',french:'Bienvenue',english:'Welcome',transliteration:'ahlan wa sahlan',category:'Salutations',level:'beginner'},
+    {id:8,arabic:'كيف حالك',french:'Comment allez-vous',english:'How are you',transliteration:'kayfa halak',category:'Salutations',level:'beginner'},
+    {id:9,arabic:'أنا بخير',french:'Je vais bien',english:'I am fine',transliteration:'ana bikhayr',category:'Salutations',level:'beginner'},
+    {id:10,arabic:'اسمي',french:'Mon nom est',english:'My name is',transliteration:'ismi',category:'Salutations',level:'beginner'},
+    {id:11,arabic:'ماء',french:'Eau',english:'Water',transliteration:'ma',category:'Nourriture',level:'beginner'},
+    {id:12,arabic:'خبز',french:'Pain',english:'Bread',transliteration:'khubz',category:'Nourriture',level:'beginner'},
+    {id:13,arabic:'تفاح',french:'Pomme',english:'Apple',transliteration:'tuffah',category:'Nourriture',level:'beginner'},
+    {id:14,arabic:'جبن',french:'Fromage',english:'Cheese',transliteration:'jubn',category:'Nourriture',level:'beginner'},
+    {id:15,arabic:'لحم',french:'Viande',english:'Meat',transliteration:'lahm',category:'Nourriture',level:'beginner'},
+    {id:16,arabic:'سمك',french:'Poisson',english:'Fish',transliteration:'samak',category:'Nourriture',level:'intermediate'},
+    {id:17,arabic:'حليب',french:'Lait',english:'Milk',transliteration:'halib',category:'Nourriture',level:'beginner'},
+    {id:18,arabic:'أرز',french:'Riz',english:'Rice',transliteration:'aruzz',category:'Nourriture',level:'beginner'},
+    {id:19,arabic:'قهوة',french:'Café',english:'Coffee',transliteration:'qahwa',category:'Nourriture',level:'beginner'},
+    {id:20,arabic:'شاي',french:'Thé',english:'Tea',transliteration:'shay',category:'Nourriture',level:'beginner'},
+    {id:21,arabic:'أب',french:'Père',english:'Father',transliteration:'ab',category:'Famille',level:'beginner'},
+    {id:22,arabic:'أم',french:'Mère',english:'Mother',transliteration:'umm',category:'Famille',level:'beginner'},
+    {id:23,arabic:'أخ',french:'Frère',english:'Brother',transliteration:'akh',category:'Famille',level:'beginner'},
+    {id:24,arabic:'أخت',french:'Sœur',english:'Sister',transliteration:'ukht',category:'Famille',level:'beginner'},
+    {id:25,arabic:'جد',french:'Grand-père',english:'Grandfather',transliteration:'jadd',category:'Famille',level:'intermediate'},
+    {id:26,arabic:'جدة',french:'Grand-mère',english:'Grandmother',transliteration:'jadda',category:'Famille',level:'intermediate'},
+    {id:27,arabic:'ابن',french:'Fils',english:'Son',transliteration:'ibn',category:'Famille',level:'intermediate'},
+    {id:28,arabic:'ابنة',french:'Fille',english:'Daughter',transliteration:'ibna',category:'Famille',level:'intermediate'},
+    {id:29,arabic:'أحمر',french:'Rouge',english:'Red',transliteration:'ahmar',category:'Couleurs',level:'beginner'},
+    {id:30,arabic:'أزرق',french:'Bleu',english:'Blue',transliteration:'azraq',category:'Couleurs',level:'beginner'},
+    {id:31,arabic:'أخضر',french:'Vert',english:'Green',transliteration:'akhdar',category:'Couleurs',level:'beginner'},
+    {id:32,arabic:'أصفر',french:'Jaune',english:'Yellow',transliteration:'asfar',category:'Couleurs',level:'beginner'},
+    {id:33,arabic:'أسود',french:'Noir',english:'Black',transliteration:'aswad',category:'Couleurs',level:'beginner'},
+    {id:34,arabic:'أبيض',french:'Blanc',english:'White',transliteration:'abyad',category:'Couleurs',level:'beginner'},
+    {id:35,arabic:'بني',french:'Marron',english:'Brown',transliteration:'bunni',category:'Couleurs',level:'beginner'},
+    {id:36,arabic:'وردي',french:'Rose',english:'Pink',transliteration:'wardi',category:'Couleurs',level:'beginner'},
+    {id:37,arabic:'واحد',french:'Un',english:'One',transliteration:'wahid',category:'Nombres',level:'beginner'},
+    {id:38,arabic:'اثنان',french:'Deux',english:'Two',transliteration:'ithnan',category:'Nombres',level:'beginner'},
+    {id:39,arabic:'ثلاثة',french:'Trois',english:'Three',transliteration:'thalatha',category:'Nombres',level:'beginner'},
+    {id:40,arabic:'عشرة',french:'Dix',english:'Ten',transliteration:'ashara',category:'Nombres',level:'beginner'},
+    {id:41,arabic:'مئة',french:'Cent',english:'Hundred',transliteration:'mia',category:'Nombres',level:'intermediate'},
+    {id:42,arabic:'يوم',french:'Jour',english:'Day',transliteration:'yawm',category:'Temps',level:'beginner'},
+    {id:43,arabic:'ليل',french:'Nuit',english:'Night',transliteration:'layl',category:'Temps',level:'beginner'},
+    {id:44,arabic:'صباح',french:'Matin',english:'Morning',transliteration:'sabah',category:'Temps',level:'beginner'},
+    {id:45,arabic:'مساء',french:'Soir',english:'Evening',transliteration:'masa',category:'Temps',level:'beginner'},
+    {id:46,arabic:'ساعة',french:'Heure',english:'Hour',transliteration:'saa',category:'Temps',level:'intermediate'},
+    {id:47,arabic:'سيارة',french:'Voiture',english:'Car',transliteration:'sayyara',category:'Transport',level:'intermediate'},
+    {id:48,arabic:'حافلة',french:'Bus',english:'Bus',transliteration:'hafila',category:'Transport',level:'intermediate'},
+    {id:49,arabic:'قطار',french:'Train',english:'Train',transliteration:'qitar',category:'Transport',level:'intermediate'},
+    {id:50,arabic:'طائرة',french:'Avion',english:'Airplane',transliteration:'taira',category:'Transport',level:'intermediate'},
+    {id:51,arabic:'دراجة',french:'Vélo',english:'Bicycle',transliteration:'darraja',category:'Transport',level:'intermediate'},
+    {id:52,arabic:'مدرسة',french:'École',english:'School',transliteration:'madrasa',category:'Lieux',level:'intermediate'},
+    {id:53,arabic:'مستشفى',french:'Hôpital',english:'Hospital',transliteration:'mustashfa',category:'Lieux',level:'advanced'},
+    {id:54,arabic:'مكتبة',french:'Bibliothèque',english:'Library',transliteration:'maktaba',category:'Lieux',level:'advanced'},
+    {id:55,arabic:'بيت',french:'Maison',english:'House',transliteration:'bayt',category:'Lieux',level:'beginner'},
+    {id:56,arabic:'مطعم',french:'Restaurant',english:'Restaurant',transliteration:'matam',category:'Lieux',level:'intermediate'},
+    {id:57,arabic:'جميل',french:'Beau',english:'Beautiful',transliteration:'jamil',category:'Adjectifs',level:'intermediate'},
+    {id:58,arabic:'كبير',french:'Grand',english:'Big',transliteration:'kabir',category:'Adjectifs',level:'beginner'},
+    {id:59,arabic:'صغير',french:'Petit',english:'Small',transliteration:'saghir',category:'Adjectifs',level:'beginner'},
+    {id:60,arabic:'جديد',french:'Nouveau',english:'New',transliteration:'jadid',category:'Adjectifs',level:'beginner'},
+    {id:61,arabic:'قديم',french:'Vieux',english:'Old',transliteration:'qadim',category:'Adjectifs',level:'intermediate'}
+    // Nouveaux mots
+    {id:62,arabic:'رأس',french:'Tête',english:'Head',transliteration:'ras',category:'Corps',level:'beginner'},
+    {id:63,arabic:'عين',french:'Œil',english:'Eye',transliteration:'ayn',category:'Corps',level:'beginner'},
+    {id:64,arabic:'أذن',french:'Oreille',english:'Ear',transliteration:'udhn',category:'Corps',level:'beginner'},
+    {id:65,arabic:'أنف',french:'Nez',english:'Nose',transliteration:'anf',category:'Corps',level:'beginner'},
+    {id:66,arabic:'فم',french:'Bouche',english:'Mouth',transliteration:'fam',category:'Corps',level:'beginner'},
+    {id:67,arabic:'يد',french:'Main',english:'Hand',transliteration:'yad',category:'Corps',level:'beginner'},
+    {id:68,arabic:'قدم',french:'Pied',english:'Foot',transliteration:'qadam',category:'Corps',level:'beginner'},
+    {id:69,arabic:'قلب',french:'Cœur',english:'Heart',transliteration:'qalb',category:'Corps',level:'intermediate'},
+    {id:70,arabic:'كلب',french:'Chien',english:'Dog',transliteration:'kalb',category:'Animaux',level:'beginner'},
+    {id:71,arabic:'قطة',french:'Chat',english:'Cat',transliteration:'qitta',category:'Animaux',level:'beginner'},
+    {id:72,arabic:'حصان',french:'Cheval',english:'Horse',transliteration:'hisan',category:'Animaux',level:'intermediate'},
+    {id:73,arabic:'طائر',french:'Oiseau',english:'Bird',transliteration:'tayr',category:'Animaux',level:'beginner'},
+    {id:74,arabic:'سمكة',french:'Poisson',english:'Fish',transliteration:'samaka',category:'Animaux',level:'beginner'},
+    {id:75,arabic:'أسد',french:'Lion',english:'Lion',transliteration:'asad',category:'Animaux',level:'intermediate'},
+    {id:76,arabic:'فيل',french:'Éléphant',english:'Elephant',transliteration:'fil',category:'Animaux',level:'intermediate'},
+    {id:77,arabic:'شمس',french:'Soleil',english:'Sun',transliteration:'shams',category:'Nature',level:'beginner'},
+    {id:78,arabic:'قمر',french:'Lune',english:'Moon',transliteration:'qamar',category:'Nature',level:'beginner'},
+    {id:79,arabic:'نجمة',french:'Étoile',english:'Star',transliteration:'najma',category:'Nature',level:'beginner'},
+    {id:80,arabic:'بحر',french:'Mer',english:'Sea',transliteration:'bahr',category:'Nature',level:'beginner'},
+    {id:81,arabic:'جبل',french:'Montagne',english:'Mountain',transliteration:'jabal',category:'Nature',level:'intermediate'},
+    {id:82,arabic:'نهر',french:'Rivière',english:'River',transliteration:'nahr',category:'Nature',level:'intermediate'},
+    {id:83,arabic:'شجرة',french:'Arbre',english:'Tree',transliteration:'shajara',category:'Nature',level:'beginner'},
+    {id:84,arabic:'زهرة',french:'Fleur',english:'Flower',transliteration:'zahra',category:'Nature',level:'beginner'},
+    {id:85,arabic:'كتاب',french:'Livre',english:'Book',transliteration:'kitab',category:'École',level:'beginner'},
+    {id:86,arabic:'قلم',french:'Stylo',english:'Pen',transliteration:'qalam',category:'École',level:'beginner'},
+    {id:87,arabic:'ورقة',french:'Papier',english:'Paper',transliteration:'waraqa',category:'École',level:'beginner'},
+    {id:88,arabic:'مكتب',french:'Bureau',english:'Desk',transliteration:'maktab',category:'École',level:'intermediate'},
+    {id:89,arabic:'معلم',french:'Professeur',english:'Teacher',transliteration:'muallim',category:'École',level:'intermediate'},
+    {id:90,arabic:'طالب',french:'Étudiant',english:'Student',transliteration:'talib',category:'École',level:'intermediate'},
+    {id:91,arabic:'درس',french:'Leçon',english:'Lesson',transliteration:'dars',category:'École',level:'intermediate'},
+    {id:92,arabic:'امتحان',french:'Examen',english:'Exam',transliteration:'imtihan',category:'École',level:'advanced'},
+    {id:93,arabic:'كبير',french:'Grand',english:'Big',transliteration:'kabir',category:'Adjectifs',level:'beginner'},
+    {id:94,arabic:'سريع',french:'Rapide',english:'Fast',transliteration:'sari',category:'Adjectifs',level:'intermediate'},
+    {id:95,arabic:'بطيء',french:'Lent',english:'Slow',transliteration:'bati',category:'Adjectifs',level:'intermediate'},
+    {id:96,arabic:'حار',french:'Chaud',english:'Hot',transliteration:'harr',category:'Adjectifs',level:'beginner'},
+    {id:97,arabic:'بارد',french:'Froid',english:'Cold',transliteration:'barid',category:'Adjectifs',level:'beginner'},
+    {id:98,arabic:'غني',french:'Riche',english:'Rich',transliteration:'ghani',category:'Adjectifs',level:'advanced'},
+    {id:99,arabic:'فقير',french:'Pauvre',english:'Poor',transliteration:'faqir',category:'Adjectifs',level:'advanced'},
+    {id:100,arabic:'سعيد',french:'Heureux',english:'Happy',transliteration:'said',category:'Émotions',level:'beginner'},
+    {id:101,arabic:'حزين',french:'Triste',english:'Sad',transliteration:'hazin',category:'Émotions',level:'beginner'},
+    {id:102,arabic:'خائف',french:'Effrayé',english:'Scared',transliteration:'khaif',category:'Émotions',level:'intermediate'}
+  ].map(w => ({...w, createdAt: new Date().toISOString()}));
+}
+
+function getDemoLessons() {
+  return [
+    {id:1,title:'Les Salutations',description:'Apprenez les salutations de base en arabe',level:'beginner',category:'Salutations',content:'مرحبا\nصباح الخير\nمساء الخير\nمع السلامة\nكيف حالك؟\nأنا بخير',translationFr:'Bonjour\nBonjour (matin)\nBonsoir\nAu revoir\nComment allez-vous ?\nJe vais bien',translationEn:'Hello\nGood morning\nGood evening\nGoodbye\nHow are you?\nI am fine',notes:'En arabe, on distingue le matin (صباح) du soir (مساء) dans les salutations.',createdAt:new Date().toISOString()},
+    {id:2,title:'La Nourriture',description:'Vocabulaire de base sur la nourriture',level:'beginner',category:'Nourriture',content:'ماء - خبز - تفاح\nجبن - لحم - سمك\nحليب - أرز - قهوة',translationFr:'Eau - Pain - Pomme\nFromage - Viande - Poisson\nLait - Riz - Café',translationEn:'Water - Bread - Apple\nCheese - Meat - Fish\nMilk - Rice - Coffee',notes:'Ces mots sont indispensables pour les courses et les restaurants.',createdAt:new Date().toISOString()}
+  ];
+}
+
+function loadData() {
+  const saved = localStorage.getItem('arabicLearnDataV4');
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved);
+      appData = { ...appData, ...parsed };
+    } catch(e) {}
+  }
+  // Toujours forcer les mots démo si aucun mot présent
+  if (!appData.words || appData.words.length === 0) {
+    appData.words = getDemoWords();
+    appData.lessons = getDemoLessons();
+    appData.words.forEach(w => initSRS(w.id));
+    saveData();
+  }
+  updateDashboard();
+  updateCategoryLists();
+}
+function saveData() { localStorage.setItem('arabicLearnDataV4', JSON.stringify(appData)); }
+
+function loadTheme() {
+  const t = localStorage.getItem('theme') || 'light';
+  document.documentElement.setAttribute('data-theme', t);
+}
+function toggleTheme() {
+  const current = document.documentElement.getAttribute('data-theme');
+  const next = current === 'dark' ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', next);
+  localStorage.setItem('theme', next);
+}
+
+// ==================== NAVIGATION ====================
+function navigateTo(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const navEl = document.querySelector('.nav-item[data-page="' + page + '"]');
+  if (navEl) navEl.classList.add('active');
+  if (window.innerWidth <= 768) closeSidebarOverlay();
+  if (page === 'vocabulary') renderVocabulary();
+  if (page === 'lessons') renderLessons();
+  if (page === 'flashcards') renderFlashcards();
+  if (page === 'dashboard') updateDashboard();
+  if (page === 'srs') renderSRS();
+  if (page === 'stats') renderStats();
+}
+
+function openSidebar() {
+  document.getElementById('sidebar').classList.add('open');
+  document.getElementById('overlayClose').classList.add('show');
+}
+function closeSidebarOverlay() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlayClose').classList.remove('show');
+}
+
+// ==================== TOAST ====================
+function showToast(msg, type = 'success') {
+  const c = document.getElementById('toastContainer');
+  const t = document.createElement('div');
+  t.className = 'toast ' + type;
+  t.innerHTML = '<span>' + (type==='success'?'✅':type==='error'?'❌':'⚠️') + '</span><span style="font-size:0.88rem;font-weight:600;">' + msg + '</span>';
+  c.appendChild(t);
+  setTimeout(() => t.remove(), 3200);
+}
+
+// ==================== MODAL ====================
+function openModal(id) { document.getElementById(id).classList.add('show'); }
+function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+
+// ==================== DASHBOARD ====================
+function updateDashboard() {
+  document.getElementById('statWords').textContent = appData.words.length;
+  document.getElementById('statLessons').textContent = appData.lessons.length;
+  document.getElementById('statQuizzes').textContent = appData.stats.quizzesTaken;
+  document.getElementById('statStreak').textContent = appData.stats.streak || 0;
+  renderGoalCard();
+  renderRecentActivity();
+}
+
+function renderGoalCard() {
+  const goal = appData.settings.dailyGoal || 10;
+  const today = new Date().toDateString();
+  const done = (appData.stats.dailyWords || {})[today] || 0;
+  const pct = Math.min(100, Math.round((done / goal) * 100));
+  document.getElementById('goalContent').innerHTML = `
+    <div class="goal-info"><span>${done} / ${goal} mots</span><span>${pct}%</span></div>
+    <div class="goal-bar-wrap"><div class="goal-bar" style="width:${pct}%"></div></div>
+    <p style="font-size:0.82rem;color:var(--text-light);margin-top:6px;">${pct>=100?'🎉 Objectif atteint !':'Continue comme ça !'}</p>
+  `;
+}
+
+function renderRecentActivity() {
+  const act = (appData.stats.activity || []).slice(-8).reverse();
+  const c = document.getElementById('recentActivity');
+  if (!act.length) {
+    c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📋</div><h3>Aucune activité</h3><p>Commence à apprendre !</p></div>';
+    return;
+  }
+  c.innerHTML = act.map(a => `
+    <div class="activity-item">
+      <div class="activity-icon" style="background:${a.color||'#e3f2fd'}">${a.icon}</div>
+      <div class="activity-text"><strong>${a.text}</strong><span>${a.time}</span></div>
+    </div>
+  `).join('');
+}
+
+function addActivity(icon, text, color) {
+  if (!appData.stats.activity) appData.stats.activity = [];
+  appData.stats.activity.push({ icon, text, color, time: new Date().toLocaleString('fr-FR') });
+  if (appData.stats.activity.length > 50) appData.stats.activity.shift();
+}
+
+// ==================== GOAL ====================
+function openGoalModal() {
+  document.getElementById('goalModalInput').value = appData.settings.dailyGoal || 10;
+  openModal('goalModal');
+}
+function saveGoalFromModal() {
+  appData.settings.dailyGoal = parseInt(document.getElementById('goalModalInput').value) || 10;
+  document.getElementById('dailyGoalInput').value = appData.settings.dailyGoal;
+  saveData(); closeModal('goalModal'); renderGoalCard();
+  showToast('Objectif mis à jour !');
+}
+function saveGoal() {
+  appData.settings.dailyGoal = parseInt(document.getElementById('dailyGoalInput').value) || 10;
+  saveData(); renderGoalCard(); showToast('Objectif enregistré !');
+}
+
+// ==================== CATEGORIES ====================
+function getCategories() {
+  const cats = new Set();
+  appData.words.forEach(w => { if (w.category) cats.add(w.category); });
+  appData.lessons.forEach(l => { if (l.category) cats.add(l.category); });
+  return Array.from(cats).sort();
+}
+function updateCategoryLists() {
+  const cats = getCategories();
+  ['wordFilterCategory','quizCategory','flashcardFilter'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (!sel) return;
+    const val = sel.value;
+    sel.innerHTML = '<option value="">' + (id==='flashcardFilter'?'Tous les mots':'Toutes') + '</option>';
+    cats.forEach(c => { sel.innerHTML += `<option value="${c}">${c}</option>`; });
+    sel.value = val;
+  });
+  const dl = document.getElementById('categoryList');
+  if (dl) { dl.innerHTML = ''; cats.forEach(c => { const o = document.createElement('option'); o.value = c; dl.appendChild(o); }); }
+}
+
+// ==================== ARABIC KEYBOARD ====================
+const arabicRows = [
+  ['ض','ص','ث','ق','ف','غ','ع','ه','خ','ح','ج','د'],
+  ['ش','س','ي','ب','ل','ا','ت','ن','م','ك','ط'],
+  ['ئ','ء','ؤ','ر','ﻻ','ى','ة','و','ز','ظ'],
+  ['◀','⌫','مسافة','ّ','َ','ُ','ِ']
+];
+function renderKeyboard(containerId, targetId) {
+  const c = document.getElementById(containerId);
+  if (!c) return;
+  c.innerHTML = '<div class="arabic-keyboard">' + arabicRows.map(row =>
+    '<div class="keyboard-row">' + row.map(k => {
+      let cls = 'key-btn';
+      if (k==='مسافة') cls+=' key-special key-space';
+      else if (k==='⌫'||k==='◀'||k==='ّ'||k==='َ'||k==='ُ'||k==='ِ') cls+=' key-special';
+      return `<button class="${cls}" onclick="handleKey('${targetId}','${k}')">${k}</button>`;
+    }).join('') + '</div>'
+  ).join('') + '</div>';
+}
+function handleKey(targetId, key) {
+  const inp = document.getElementById(targetId);
+  if (!inp) return;
+  if (key === '⌫') { inp.value = inp.value.slice(0,-1); }
+  else if (key === '◀') { inp.value = ''; }
+  else if (key === 'مسافة') { inp.value += ' '; }
+  else { inp.value += key; }
+  inp.focus();
+}
+
+// ==================== VOCABULARY ====================
+function openAddWordModal() { openModal('addWordModal'); }
+
+function saveWord() {
+  const arabic = document.getElementById('wordArabic').value.trim();
+  const french = document.getElementById('wordFrench').value.trim();
+  if (!arabic || !french) { showToast('Arabe et français requis', 'error'); return; }
+  const word = {
+    id: Date.now(),
+    arabic, french,
+    english: document.getElementById('wordEnglish').value.trim(),
+    transliteration: document.getElementById('wordTransliteration').value.trim(),
+    category: document.getElementById('wordCategory').value.trim(),
+    level: document.getElementById('wordLevel').value,
+    example: document.getElementById('wordExample').value.trim(),
+    exampleTranslation: document.getElementById('wordExampleTranslation').value.trim(),
+    createdAt: new Date().toISOString()
+  };
+  appData.words.push(word);
+  initSRS(word.id);
+  // daily goal tracking
+  const today = new Date().toDateString();
+  if (!appData.stats.dailyWords) appData.stats.dailyWords = {};
+  appData.stats.dailyWords[today] = (appData.stats.dailyWords[today] || 0) + 1;
+  addActivity('📖', `Mot ajouté : ${arabic} (${french})`, '#e3f2fd');
+  saveData(); updateCategoryLists(); renderVocabulary(); updateDashboard();
+  closeModal('addWordModal'); clearWordForm();
+  showToast('Mot ajouté !');
+}
+
+function clearWordForm() {
+  ['wordArabic','wordFrench','wordEnglish','wordTransliteration','wordCategory','wordExample','wordExampleTranslation'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  const lvl = document.getElementById('wordLevel'); if (lvl) lvl.value = 'beginner';
+}
+
+function editWord(id) {
+  const word = appData.words.find(w => w.id === id);
+  if (!word) return;
+  document.getElementById('editWordId').value = id;
+  document.getElementById('editWordArabic').value = word.arabic;
+  document.getElementById('editWordFrench').value = word.french;
+  document.getElementById('editWordEnglish').value = word.english || '';
+  document.getElementById('editWordTransliteration').value = word.transliteration || '';
+  document.getElementById('editWordCategory').value = word.category || '';
+  document.getElementById('editWordLevel').value = word.level || 'beginner';
+  document.getElementById('editWordExample').value = word.example || '';
+  document.getElementById('editWordExampleTranslation').value = word.exampleTranslation || '';
+  openModal('editWordModal');
+}
+
+function updateWord() {
+  const id = parseInt(document.getElementById('editWordId').value);
+  const word = appData.words.find(w => w.id === id);
+  if (!word) return;
+  word.arabic = document.getElementById('editWordArabic').value.trim();
+  word.french = document.getElementById('editWordFrench').value.trim();
+  if (!word.arabic || !word.french) { showToast('Arabe et français requis', 'error'); return; }
+  word.english = document.getElementById('editWordEnglish').value.trim();
+  word.transliteration = document.getElementById('editWordTransliteration').value.trim();
+  word.category = document.getElementById('editWordCategory').value.trim();
+  word.level = document.getElementById('editWordLevel').value;
+  word.example = document.getElementById('editWordExample').value.trim();
+  word.exampleTranslation = document.getElementById('editWordExampleTranslation').value.trim();
+  saveData(); updateCategoryLists(); renderVocabulary();
+  closeModal('editWordModal'); showToast('Mot modifié !');
+}
+
+function deleteWord(id) {
+  if (!confirm('Supprimer ce mot ?')) return;
+  appData.words = appData.words.filter(w => w.id !== id);
+  delete appData.srs[id];
+  saveData(); updateCategoryLists(); renderVocabulary(); updateDashboard();
+  showToast('Mot supprimé !');
+}
+
+function renderVocabulary() {
+  const c = document.getElementById('vocabularyTableContainer');
+  if (!appData.words.length) {
+    c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📖</div><h3>Aucun mot</h3><p>Ajoute ton premier mot ou utilise l\'IA !</p></div>';
+    return;
+  }
+  c.innerHTML = '<table class="data-table"><thead><tr><th>Arabe</th><th>Français</th><th>Anglais</th><th>Catégorie</th><th>Niveau</th><th>Actions</th></tr></thead><tbody id="vocabularyTableBody"></tbody></table>';
+  filterWords();
+}
+
+function filterWords() {
+  const search = (document.getElementById('wordSearch')?.value||'').toLowerCase();
+  const levelF = document.getElementById('wordFilterLevel')?.value||'';
+  const catF = document.getElementById('wordFilterCategory')?.value||'';
+  const tbody = document.getElementById('vocabularyTableBody');
+  if (!tbody) return;
+  let filtered = appData.words.filter(w => {
+    const ms = !search || w.arabic.includes(search) || w.french.toLowerCase().includes(search) || (w.english&&w.english.toLowerCase().includes(search)) || (w.transliteration&&w.transliteration.toLowerCase().includes(search));
+    return ms && (!levelF||w.level===levelF) && (!catF||w.category===catF);
+  });
+  if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-light);padding:30px;">Aucun résultat</td></tr>'; return; }
+  tbody.innerHTML = filtered.map(w => `
+    <tr>
+      <td class="arabic-cell">${w.arabic}</td>
+      <td>${w.french}</td>
+      <td>${w.english||'-'}</td>
+      <td>${w.category||'-'}</td>
+      <td><span class="badge badge-${w.level}">${w.level}</span></td>
+      <td>
+        <button class="btn btn-icon btn-secondary" title="Écouter" onclick="speakText('${w.arabic.replace(/'/g,"\\'")}')">🔊</button>
+        <button class="btn btn-icon btn-secondary" title="Modifier" onclick="editWord(${w.id})">✏️</button>
+        <button class="btn btn-icon btn-danger" title="Supprimer" onclick="deleteWord(${w.id})">🗑️</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ==================== LESSONS ====================
+function openAddLessonModal() { openModal('addLessonModal'); }
+
+function saveLesson(lessonData) {
+  let lesson;
+  if (lessonData) {
+    lesson = { ...lessonData, id: Date.now(), createdAt: new Date().toISOString() };
+  } else {
+    const title = document.getElementById('lessonTitle').value.trim();
+    const content = document.getElementById('lessonContent').value.trim();
+    if (!title || !content) { showToast('Titre et contenu requis', 'error'); return; }
+    lesson = {
+      id: Date.now(), title, content,
+      description: document.getElementById('lessonDescription').value.trim(),
+      level: document.getElementById('lessonLevel').value,
+      category: document.getElementById('lessonCategory').value.trim(),
+      translationFr: document.getElementById('lessonTranslationFr').value.trim(),
+      translationEn: document.getElementById('lessonTranslationEn').value.trim(),
+      notes: document.getElementById('lessonNotes').value.trim(),
+      createdAt: new Date().toISOString()
+    };
+  }
+  appData.lessons.push(lesson);
+  addActivity('📚', `Leçon ajoutée : ${lesson.title}`, '#e8f5e9');
+  saveData(); updateCategoryLists(); renderLessons(); updateDashboard();
+  closeModal('addLessonModal'); clearLessonForm();
+  showToast('Leçon ajoutée !');
+}
+
+function clearLessonForm() {
+  ['lessonTitle','lessonDescription','lessonCategory','lessonContent','lessonTranslationFr','lessonTranslationEn','lessonNotes'].forEach(id => {
+    const el = document.getElementById(id); if(el) el.value='';
+  });
+}
+
+function deleteLesson(id) {
+  if (!confirm('Supprimer ?')) return;
+  appData.lessons = appData.lessons.filter(l => l.id !== id);
+  saveData(); renderLessons(); updateDashboard(); showToast('Leçon supprimée !');
+}
+
+function viewLesson(id) {
+  const l = appData.lessons.find(x => x.id === id);
+  if (!l) return;
+  currentLessonArabic = l.content;
+  document.getElementById('viewLessonTitle').textContent = l.title;
+  document.getElementById('viewLessonBody').innerHTML = `
+    <div style="margin-bottom:15px;">
+      <span class="badge badge-${l.level}">${l.level}</span>
+      ${l.category?`<span class="badge" style="background:#e3f2fd;color:#1976d2;margin-left:6px;">${l.category}</span>`:''}
+    </div>
+    <div style="font-family:'Amiri',serif;font-size:1.35rem;line-height:2.1;background:rgba(26,95,74,0.04);padding:18px;border-radius:12px;margin-bottom:18px;direction:rtl;text-align:right;">${l.content.replace(/\n/g,'<br>')}</div>
+    ${l.translationFr?`<div style="margin-bottom:14px;"><strong>🇫🇷 Français :</strong><p style="margin-top:7px;color:var(--text-light);line-height:1.6;font-size:0.92rem;">${l.translationFr.replace(/\n/g,'<br>')}</p></div>`:''}
+    ${l.translationEn?`<div style="margin-bottom:14px;"><strong>🇬🇧 English :</strong><p style="margin-top:7px;color:var(--text-light);line-height:1.6;font-size:0.92rem;">${l.translationEn.replace(/\n/g,'<br>')}</p></div>`:''}
+    ${l.notes?`<div style="background:rgba(243,156,18,0.08);padding:14px;border-radius:12px;border-left:3px solid var(--warning);"><strong>📝 Notes :</strong><p style="margin-top:7px;line-height:1.6;font-size:0.88rem;">${l.notes.replace(/\n/g,'<br>')}</p></div>`:''}
+  `;
+  openModal('viewLessonModal');
+}
+
+function renderLessons() {
+  const c = document.getElementById('lessonsList');
+  const search = (document.getElementById('lessonSearch')?.value||'').toLowerCase();
+  let filtered = appData.lessons.filter(l => !search || l.title.toLowerCase().includes(search));
+  if (!filtered.length) {
+    c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">📚</div><h3>Aucune leçon</h3><p>Crée ou génère une leçon avec l\'IA !</p></div>';
+    return;
+  }
+  c.innerHTML = filtered.map(l => `
+    <div class="lesson-item" onclick="viewLesson(${l.id})">
+      <div class="lesson-info">
+        <h4>${l.title}</h4>
+        <p>${l.description||''}</p>
+      </div>
+      <div class="lesson-meta">
+        <span class="badge badge-${l.level}">${l.level}</span>
+        <div class="lesson-actions">
+          <button class="btn btn-icon btn-secondary" onclick="event.stopPropagation();viewLesson(${l.id})">👁️</button>
+          <button class="btn btn-icon btn-danger" onclick="event.stopPropagation();deleteLesson(${l.id})">🗑️</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+function filterLessons() { renderLessons(); }
+
+// ==================== FLASHCARDS ====================
+function renderFlashcards() {
+  const c = document.getElementById('flashcardsContainer');
+  const filter = document.getElementById('flashcardFilter')?.value||'';
+  let filtered = filter ? appData.words.filter(w => w.category===filter) : appData.words;
+  if (!filtered.length) {
+    c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🎴</div><h3>Aucun mot</h3><p>Ajoute des mots pour les flashcards !</p></div>';
+    return;
+  }
+  c.innerHTML = filtered.map(w => `
+    <div class="flashcard" onclick="this.classList.toggle('flipped')">
+      <div class="flashcard-actions">
+        <button class="fc-btn speak" onclick="event.stopPropagation();speakText('${w.arabic.replace(/'/g,"\\'")}')">🔊</button>
+        <button class="fc-btn delete" onclick="event.stopPropagation();deleteWord(${w.id});renderFlashcards()">🗑️</button>
+      </div>
+      <div class="flashcard-front">
+        <div class="arabic-word">${w.arabic}</div>
+        ${w.transliteration?`<div class="transliteration">${w.transliteration}</div>`:''}
+        <div style="margin-top:12px;color:var(--text-muted);font-size:0.78rem;">Cliquer pour voir</div>
+      </div>
+      <div class="flashcard-back">
+        <div class="translation">🇫🇷 ${w.french}</div>
+        ${w.english?`<div class="translation-en">🇬🇧 ${w.english}</div>`:''}
+        ${w.category?`<div style="margin-top:8px;"><span class="badge badge-${w.level}">${w.level}</span></div>`:''}
+      </div>
+    </div>
+  `).join('');
+}
+function shuffleFlashcards() {
+  appData.words.sort(() => Math.random() - 0.5);
+  renderFlashcards();
+}
+
+// ==================== SRS (Spaced Repetition) ====================
+function initSRS(wordId) {
+  if (!appData.srs[wordId]) {
+    appData.srs[wordId] = { interval: 1, easeFactor: 2.5, nextReview: Date.now(), repetitions: 0 };
+  }
+}
+function initAllSRS() {
+  appData.words.forEach(w => initSRS(w.id));
+}
+
+function getDueWords() {
+  const now = Date.now();
+  return appData.words.filter(w => {
+    const s = appData.srs[w.id];
+    return !s || s.nextReview <= now;
+  });
+}
+
+function renderSRS() {
+  initAllSRS();
+  const due = getDueWords();
+  const c = document.getElementById('srsContent');
+  const dueCount = document.getElementById('srsDueCount');
+  dueCount.textContent = `${due.length} mot(s) à réviser`;
+
+  if (!due.length) {
+    c.innerHTML = `
+      <div class="card" style="text-align:center;padding:50px 20px;">
+        <div style="font-size:3rem;margin-bottom:15px;">🎉</div>
+        <h3 style="font-size:1.3rem;font-weight:800;color:var(--primary);margin-bottom:8px;">Toutes les révisions sont à jour !</h3>
+        <p style="color:var(--text-light);font-size:0.88rem;">Reviens plus tard ou ajoute de nouveaux mots.</p>
+      </div>`;
+    currentSRSWord = null;
+    return;
+  }
+
+  currentSRSWord = due[0];
+  c.innerHTML = `
+    <div class="card srs-card">
+      <div style="color:var(--text-light);font-size:0.82rem;font-weight:700;margin-bottom:5px;">${due.length} mot(s) restant(s)</div>
+      <div class="srs-word">${currentSRSWord.arabic}</div>
+      ${currentSRSWord.transliteration?`<div style="color:var(--text-light);font-size:0.9rem;font-style:italic;margin-bottom:12px;">${currentSRSWord.transliteration}</div>`:''}
+      <button class="btn btn-secondary srs-reveal-btn" onclick="revealSRS()">👁️ Voir la traduction</button>
+      <div id="srsAnswer" class="hidden">
+        <div style="font-size:1.4rem;font-weight:800;color:var(--primary);margin:15px 0 5px;">${currentSRSWord.french}</div>
+        ${currentSRSWord.english?`<div style="color:var(--text-light);margin-bottom:5px;">${currentSRSWord.english}</div>`:''}
+        ${currentSRSWord.example?`<div style="font-family:'Amiri',serif;font-size:1.1rem;direction:rtl;color:var(--text-light);margin-top:8px;">${currentSRSWord.example}</div>`:''}
+        <div class="srs-buttons">
+          <button class="srs-btn again" onclick="submitSRS(1)">🔴 À revoir<span class="srs-interval">${getSRSInterval(currentSRSWord.id,1)}</span></button>
+          <button class="srs-btn hard" onclick="submitSRS(2)">🟠 Difficile<span class="srs-interval">${getSRSInterval(currentSRSWord.id,2)}</span></button>
+          <button class="srs-btn good" onclick="submitSRS(4)">🟢 Bien<span class="srs-interval">${getSRSInterval(currentSRSWord.id,4)}</span></button>
+          <button class="srs-btn easy" onclick="submitSRS(5)">🔵 Facile<span class="srs-interval">${getSRSInterval(currentSRSWord.id,5)}</span></button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function getSRSInterval(wordId, quality) {
+  const s = appData.srs[wordId] || { interval:1, easeFactor:2.5, repetitions:0 };
+  let { interval, easeFactor, repetitions } = s;
+  if (quality < 3) { repetitions = 0; interval = 1; }
+  else {
+    if (repetitions === 0) interval = 1;
+    else if (repetitions === 1) interval = 6;
+    else interval = Math.round(interval * easeFactor);
+    repetitions++;
+    easeFactor = Math.max(1.3, easeFactor + 0.1 - (5-quality)*(0.08+(5-quality)*0.02));
+  }
+  if (interval === 1) return '< 1 jour';
+  if (interval < 30) return `${interval} jours`;
+  return `${Math.round(interval/30)} mois`;
+}
+
+function revealSRS() {
+  document.getElementById('srsAnswer').classList.remove('hidden');
+  document.querySelector('.srs-reveal-btn').classList.add('hidden');
+  if (currentSRSWord) speakText(currentSRSWord.arabic);
+}
+
+function submitSRS(quality) {
+  if (!currentSRSWord) return;
+  const wordId = currentSRSWord.id;
+  if (!appData.srs[wordId]) initSRS(wordId);
+  let s = appData.srs[wordId];
+  if (quality < 3) { s.repetitions = 0; s.interval = 1; }
+  else {
+    if (s.repetitions === 0) s.interval = 1;
+    else if (s.repetitions === 1) s.interval = 6;
+    else s.interval = Math.round(s.interval * s.easeFactor);
+    s.repetitions++;
+    s.easeFactor = Math.max(1.3, s.easeFactor + 0.1 - (5-quality)*(0.08+(5-quality)*0.02));
+  }
+  s.nextReview = Date.now() + s.interval * 86400000;
+  addActivity('🔁', `SRS : ${currentSRSWord.arabic} — ${quality>=4?'Bien':'À revoir'}`, quality>=4?'#e8f5e9':'#ffebee');
+  updateStreak();
+  saveData(); renderSRS();
+}
+
+function updateStreak() {
+  const today = new Date().toDateString();
+  if (appData.stats.lastStudyDate !== today) {
+    const last = appData.stats.lastStudyDate;
+    const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
+    if (last === yesterday.toDateString()) { appData.stats.streak = (appData.stats.streak||0) + 1; }
+    else if (!last || last !== today) { appData.stats.streak = 1; }
+    appData.stats.lastStudyDate = today;
+  }
+}
+
+// ==================== QUIZ ====================
+function startQuiz() {
+  const type = document.getElementById('quizType').value;
+  const cat = document.getElementById('quizCategory').value;
+  const count = parseInt(document.getElementById('quizCount').value);
+  const level = document.getElementById('quizLevel').value;
+  let pool = appData.words;
+  if (cat) pool = pool.filter(w => w.category===cat);
+  if (level) pool = pool.filter(w => w.level===level);
+  if (pool.length < 2) { showToast('Pas assez de mots ! Ajoutes-en au moins 2.', 'warning'); return; }
+  if (pool.length < 4) { showToast(`Seulement ${pool.length} mots disponibles — quiz réduit.`, 'warning'); }
+  pool = pool.sort(() => Math.random()-0.5);
+  currentQuiz = { type, questions: pool.slice(0, Math.min(count, pool.length)) };
+  currentQuizIndex = 0; currentQuizScore = 0;
+  document.getElementById('quizSetup').classList.add('hidden');
+  document.getElementById('quizGame').classList.remove('hidden');
+  renderQuizQuestion();
+}
+
+function renderQuizQuestion() {
+  const q = currentQuiz.questions[currentQuizIndex];
+  const total = currentQuiz.questions.length;
+  document.getElementById('quizProgressBar').style.width = (currentQuizIndex/total*100)+'%';
+  const content = document.getElementById('quizContent');
+  let questionHTML, correctAnswer, options = [];
+  const allWords = appData.words;
+
+  if (currentQuiz.type === 'translation') {
+    questionHTML = `<div class="quiz-question">${q.arabic}</div>`;
+    correctAnswer = q.french;
+    const wrong = allWords.filter(w=>w.id!==q.id).sort(()=>Math.random()-0.5).slice(0,3);
+    options = [q.french, ...wrong.map(w=>w.french)].sort(()=>Math.random()-0.5);
+  } else if (currentQuiz.type === 'reverse') {
+    questionHTML = `<div class="quiz-question" style="font-family:'Cairo',sans-serif;font-size:1.6rem;">${q.french}</div>`;
+    correctAnswer = q.arabic;
+    const wrong = allWords.filter(w=>w.id!==q.id).sort(()=>Math.random()-0.5).slice(0,3);
+    options = [q.arabic, ...wrong.map(w=>w.arabic)].sort(()=>Math.random()-0.5);
+  } else {
+    questionHTML = `<div class="quiz-question">🔊</div><button class="btn btn-secondary" onclick="speakText('${q.arabic.replace(/'/g,"\\'")}')">Écouter à nouveau</button>`;
+    correctAnswer = q.arabic;
+    const wrong = allWords.filter(w=>w.id!==q.id).sort(()=>Math.random()-0.5).slice(0,3);
+    options = [q.arabic, ...wrong.map(w=>w.arabic)].sort(()=>Math.random()-0.5);
+    setTimeout(() => speakText(q.arabic), 300);
+  }
+
+  const isArabicOpt = currentQuiz.type === 'reverse' || currentQuiz.type === 'listening';
+  content.innerHTML = `
+    <div style="color:var(--text-light);font-size:0.82rem;margin-bottom:8px;font-weight:700;">Question ${currentQuizIndex+1} / ${total}</div>
+    ${questionHTML}
+    <div class="quiz-hint">${currentQuiz.type==='listening'?'Écoute et choisis la bonne réponse':''}</div>
+    <div class="quiz-options" id="quizOptions"></div>
+    <div class="quiz-feedback" id="quizFeedback"></div>
+    <div style="margin-top:22px;display:flex;justify-content:center;">
+      <button class="btn btn-primary hidden" id="quizNextBtn" onclick="nextQuizQuestion()">${currentQuizIndex<total-1?'Suivant →':'Terminer'}</button>
+    </div>
+  `;
+
+  const optsC = document.getElementById('quizOptions');
+  options.forEach(opt => {
+    const btn = document.createElement('div');
+    btn.className = 'quiz-option';
+    if (isArabicOpt) btn.style.fontFamily = "'Amiri', serif";
+    btn.textContent = opt;
+    btn.onclick = () => handleQuizAnswer(btn, opt, correctAnswer, q);
+    optsC.appendChild(btn);
+  });
+}
+
+function handleQuizAnswer(btn, selected, correct, q) {
+  document.querySelectorAll('.quiz-option').forEach(o => o.style.pointerEvents='none');
+  const fb = document.getElementById('quizFeedback');
+  appData.stats.totalAnswers = (appData.stats.totalAnswers||0) + 1;
+  const isCorrect = selected === correct;
+  if (isCorrect) {
+    btn.classList.add('correct');
+    fb.className = 'quiz-feedback show correct';
+    fb.textContent = '✅ Correct !';
+    currentQuizScore++;
+    appData.stats.correctAnswers = (appData.stats.correctAnswers||0) + 1;
+  } else {
+    btn.classList.add('wrong');
+    document.querySelectorAll('.quiz-option').forEach(o => { if (o.textContent===correct) o.classList.add('correct'); });
+    fb.className = 'quiz-feedback show wrong';
+    fb.textContent = '❌ Correct : ' + correct;
+  }
+  document.getElementById('quizNextBtn').classList.remove('hidden');
+  saveData();
+}
+
+function nextQuizQuestion() {
+  currentQuizIndex++;
+  if (currentQuizIndex >= currentQuiz.questions.length) showQuizResults();
+  else renderQuizQuestion();
+}
+
+function showQuizResults() {
+  appData.stats.quizzesTaken = (appData.stats.quizzesTaken||0) + 1;
+  updateStreak();
+  const total = currentQuiz.questions.length;
+  const pct = Math.round(currentQuizScore/total*100);
+  const stars = pct>=90?'⭐⭐⭐':pct>=70?'⭐⭐':'⭐';
+  const msg = pct>=90?'Excellent ! 🌟':pct>=70?'Bien joué ! 👍':'Continue à pratiquer ! 💪';
+  addActivity('🎯', `Quiz terminé : ${pct}% (${currentQuizScore}/${total})`, pct>=70?'#e8f5e9':'#fff3e0');
+  saveData(); updateDashboard();
+  document.getElementById('quizContent').innerHTML = `
+    <div style="font-size:1rem;color:var(--text-light);margin-bottom:8px;">Quiz terminé !</div>
+    <div class="quiz-score">${pct}%</div>
+    <div style="font-size:2rem;margin:10px 0;">${stars}</div>
+    <div style="font-size:1rem;margin:12px 0;">${msg}</div>
+    <div style="color:var(--text-light);margin-bottom:22px;font-size:0.88rem;">${currentQuizScore} correct sur ${total}</div>
+    <div style="display:flex;gap:12px;justify-content:center;">
+      <button class="btn btn-primary" onclick="startQuiz()">🔄 Réessayer</button>
+      <button class="btn btn-secondary" onclick="endQuiz()">🏠 Menu</button>
+    </div>
+  `;
+}
+
+function endQuiz() {
+  document.getElementById('quizGame').classList.add('hidden');
+  document.getElementById('quizSetup').classList.remove('hidden');
+}
+
+// ==================== STATS ====================
+function renderStats() {
+  const total = appData.stats.totalAnswers || 0;
+  const correct = appData.stats.correctAnswers || 0;
+  const accuracy = total ? Math.round(correct/total*100) : 0;
+  const due = getDueWords().length;
+  const c = document.getElementById('statsContent');
+
+  // Category breakdown
+  const catCounts = {};
+  appData.words.forEach(w => { catCounts[w.category||'Sans catégorie'] = (catCounts[w.category||'Sans catégorie']||0)+1; });
+  const cats = Object.entries(catCounts).sort((a,b)=>b[1]-a[1]).slice(0,6);
+  const maxCat = cats[0]?.[1]||1;
+
+  // Level breakdown
+  const levels = { beginner:0, intermediate:0, advanced:0 };
+  appData.words.forEach(w => { levels[w.level] = (levels[w.level]||0)+1; });
+
+  c.innerHTML = `
+    <div class="stats-grid">
+      <div class="stats-big-card"><div class="stats-big-num">${appData.words.length}</div><div class="stats-big-label">Mots appris</div></div>
+      <div class="stats-big-card"><div class="stats-big-num">${appData.stats.quizzesTaken||0}</div><div class="stats-big-label">Quiz effectués</div></div>
+      <div class="stats-big-card"><div class="stats-big-num">${accuracy}%</div><div class="stats-big-label">Précision quiz</div></div>
+      <div class="stats-big-card"><div class="stats-big-num">${appData.stats.streak||0}🔥</div><div class="stats-big-label">Jours consécutifs</div></div>
+      <div class="stats-big-card"><div class="stats-big-num">${due}</div><div class="stats-big-label">Révisions SRS en attente</div></div>
+      <div class="stats-big-card"><div class="stats-big-num">${appData.lessons.length}</div><div class="stats-big-label">Leçons créées</div></div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:20px;">
+      <div class="card">
+        <h3 class="card-title">📊 Mots par catégorie</h3>
+        ${cats.length ? `<div class="chart-bar-wrap">${cats.map(([cat,n])=>`
+          <div class="chart-bar-row">
+            <div class="chart-bar-label">${cat}</div>
+            <div class="chart-bar-bg"><div class="chart-bar-fill" style="width:${Math.round(n/maxCat*100)}%;background:var(--primary);"></div></div>
+            <div class="chart-bar-val">${n}</div>
+          </div>
+        `).join('')}</div>` : '<p style="color:var(--text-light);font-size:0.88rem;">Aucune donnée</p>'}
+      </div>
+
+      <div class="card">
+        <h3 class="card-title">🎓 Mots par niveau</h3>
+        <div class="chart-bar-wrap">
+          <div class="chart-bar-row"><div class="chart-bar-label">Débutant</div><div class="chart-bar-bg"><div class="chart-bar-fill" style="width:${appData.words.length?levels.beginner/appData.words.length*100:0}%;background:#27ae60;"></div></div><div class="chart-bar-val">${levels.beginner}</div></div>
+          <div class="chart-bar-row"><div class="chart-bar-label">Intermédiaire</div><div class="chart-bar-bg"><div class="chart-bar-fill" style="width:${appData.words.length?levels.intermediate/appData.words.length*100:0}%;background:#f39c12;"></div></div><div class="chart-bar-val">${levels.intermediate}</div></div>
+          <div class="chart-bar-row"><div class="chart-bar-label">Avancé</div><div class="chart-bar-bg"><div class="chart-bar-fill" style="width:${appData.words.length?levels.advanced/appData.words.length*100:0}%;background:#c2185b;"></div></div><div class="chart-bar-val">${levels.advanced}</div></div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ==================== AI GENERATE ====================
+function openAIGenerateModal() {
+  document.getElementById('aiResult').innerHTML = '';
+  document.getElementById('aiImportBtn').classList.add('hidden');
+  document.getElementById('aiTheme').value = '';
+  aiGeneratedWords = [];
+  openModal('aiGenerateModal');
+}
+
+async function generateWordsWithAI() {
+  const theme = document.getElementById('aiTheme').value.trim();
+  const count = document.getElementById('aiCount').value;
+  const level = document.getElementById('aiLevel').value;
+  if (!theme) { showToast('Entre un thème', 'warning'); return; }
+
+  const btn = document.getElementById('aiGenerateBtn');
+  const resultDiv = document.getElementById('aiResult');
+  btn.disabled = true;
+  resultDiv.innerHTML = '<div class="ai-loading"><div class="ai-spinner"></div>Génération en cours...</div>';
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: `Génère ${count} mots arabes sur le thème "${theme}" pour un niveau ${level}. 
+Réponds UNIQUEMENT avec un JSON valide, sans markdown ni backticks, comme ceci:
+[{"arabic":"مرحبا","french":"bonjour","english":"hello","transliteration":"marhaban","level":"${level}","category":"${theme}"},...]
+Sois précis, utilise des mots arabes courants et authentiques.`
+        }]
+      })
+    });
+    const data = await response.json();
+    const text = data.content.map(i => i.text||'').join('');
+    const clean = text.replace(/```json|```/g,'').trim();
+    const words = JSON.parse(clean);
+    aiGeneratedWords = words;
+
+    resultDiv.innerHTML = `
+      <p style="font-size:0.85rem;font-weight:700;color:var(--success);margin-bottom:10px;">✅ ${words.length} mots générés !</p>
+      <div style="max-height:250px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;padding:10px;">
+        ${words.map((w,i) => `
+          <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);">
+            <span style="font-family:'Amiri',serif;font-size:1.2rem;direction:rtl;width:80px;">${w.arabic}</span>
+            <span style="flex:1;font-size:0.85rem;color:var(--text);">${w.french} ${w.english?'/ '+w.english:''}</span>
+            <span style="font-size:0.75rem;color:var(--text-light);">${w.transliteration||''}</span>
+          </div>
+        `).join('')}
+      </div>
+    `;
+    document.getElementById('aiImportBtn').classList.remove('hidden');
+  } catch(e) {
+    resultDiv.innerHTML = '<p style="color:var(--danger);font-size:0.88rem;">❌ Erreur de génération. Réessaie.</p>';
+  }
+  btn.disabled = false;
+}
+
+function importAIWords() {
+  if (!aiGeneratedWords.length) return;
+  const today = new Date().toDateString();
+  if (!appData.stats.dailyWords) appData.stats.dailyWords = {};
+  aiGeneratedWords.forEach(w => {
+    const word = { ...w, id: Date.now() + Math.random(), createdAt: new Date().toISOString() };
+    appData.words.push(word);
+    initSRS(word.id);
+    appData.stats.dailyWords[today] = (appData.stats.dailyWords[today]||0) + 1;
+  });
+  addActivity('🤖', `IA : ${aiGeneratedWords.length} mots importés`, '#f3e5f5');
+  saveData(); updateCategoryLists(); renderVocabulary(); updateDashboard();
+  closeModal('aiGenerateModal');
+  showToast(`${aiGeneratedWords.length} mots importés !`);
+  aiGeneratedWords = [];
+}
+
+function openAILessonModal() {
+  document.getElementById('aiLessonResult').innerHTML = '';
+  document.getElementById('aiLessonImportBtn').classList.add('hidden');
+  document.getElementById('aiLessonTopic').value = '';
+  aiGeneratedLesson = null;
+  openModal('aiLessonModal');
+}
+
+async function generateLessonWithAI() {
+  const topic = document.getElementById('aiLessonTopic').value.trim();
+  const level = document.getElementById('aiLessonLevel').value;
+  if (!topic) { showToast('Entre un sujet', 'warning'); return; }
+
+  const btn = document.getElementById('aiLessonBtn');
+  const resultDiv = document.getElementById('aiLessonResult');
+  btn.disabled = true;
+  resultDiv.innerHTML = '<div class="ai-loading"><div class="ai-spinner"></div>Génération en cours...</div>';
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 1000,
+        messages: [{
+          role: 'user',
+          content: `Crée une leçon d'arabe de niveau ${level} sur le thème "${topic}".
+Réponds UNIQUEMENT avec un JSON valide, sans markdown ni backticks:
+{"title":"...","description":"...","level":"${level}","category":"${topic}","content":"texte arabe...","translationFr":"traduction française...","translationEn":"english translation...","notes":"notes grammaticales..."}`
+        }]
+      })
+    });
+    const data = await response.json();
+    const text = data.content.map(i=>i.text||'').join('');
+    const clean = text.replace(/```json|```/g,'').trim();
+    const lesson = JSON.parse(clean);
+    aiGeneratedLesson = lesson;
+
+    resultDiv.innerHTML = `
+      <div style="background:rgba(26,95,74,0.05);border-radius:10px;padding:15px;border:1px solid var(--border);">
+        <h4 style="font-weight:800;color:var(--primary);margin-bottom:8px;">${lesson.title}</h4>
+        <p style="font-size:0.83rem;color:var(--text-light);margin-bottom:12px;">${lesson.description||''}</p>
+        <div style="font-family:'Amiri',serif;font-size:1.15rem;direction:rtl;text-align:right;line-height:2;">${(lesson.content||'').substring(0,200)}...</div>
+      </div>
+    `;
+    document.getElementById('aiLessonImportBtn').classList.remove('hidden');
+  } catch(e) {
+    resultDiv.innerHTML = '<p style="color:var(--danger);font-size:0.88rem;">❌ Erreur. Réessaie.</p>';
+  }
+  btn.disabled = false;
+}
+
+function importAILesson() {
+  if (!aiGeneratedLesson) return;
+  saveLesson(aiGeneratedLesson);
+  closeModal('aiLessonModal');
+  aiGeneratedLesson = null;
+}
+
+// ==================== SPEECH ====================
+function speakText(text) {
+  if (!text) return;
+  if (!('speechSynthesis' in window)) { showToast('Audio non supporté', 'warning'); return; }
+  window.speechSynthesis.cancel();
+  const trySpeak = () => {
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.rate = 0.7; utt.pitch = 1; utt.volume = 1;
+    const voices = window.speechSynthesis.getVoices();
+    const arabicVoice = voices.find(v => v.lang && v.lang.startsWith('ar')) || voices.find(v => v.name && v.name.toLowerCase().includes('arab'));
+    if (arabicVoice) { utt.voice = arabicVoice; utt.lang = arabicVoice.lang; }
+    else { utt.lang = 'ar-SA'; }
+    utt.onerror = (e) => showToast('Erreur audio', 'error');
+    window.speechSynthesis.speak(utt);
+  };
+  if (window.speechSynthesis.getVoices().length > 0) { trySpeak(); }
+  else { window.speechSynthesis.onvoiceschanged = () => { trySpeak(); window.speechSynthesis.onvoiceschanged = null; }; trySpeak(); }
+}
+
+// ==================== EXPORT / IMPORT ====================
+function exportData() {
+  const blob = new Blob([JSON.stringify(appData, null, 2)], { type:'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href=url;
+  a.download='arabiclearn_' + new Date().toISOString().split('T')[0]+'.json';
+  a.click(); URL.revokeObjectURL(url);
+  showToast('Données exportées !');
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.words && data.lessons) {
+        appData = { ...appData, ...data };
+        saveData(); updateDashboard(); updateCategoryLists();
+        renderVocabulary(); renderLessons();
+        showToast('Données importées !');
+      } else { showToast('Format invalide', 'error'); }
+    } catch { showToast('Erreur importation', 'error'); }
+  };
+  reader.readAsText(file);
+  event.target.value='';
+}
+
+function testAudio() {
+  const r = document.getElementById('audioTestResult');
+  if (!('speechSynthesis' in window)) { r.innerHTML = '❌ Synthèse vocale non supportée sur ce navigateur.'; return; }
+  r.innerHTML = '⏳ Test en cours...';
+  speakText('مرحبا، كيف حالك؟');
+  const voices = window.speechSynthesis.getVoices();
+  const arabicVoice = voices.find(v => v.lang && v.lang.startsWith('ar'));
+  if (arabicVoice) r.innerHTML = '✅ Voix arabe trouvée : ' + arabicVoice.name + ' (' + arabicVoice.lang + ')';
+  else r.innerHTML = '⚠️ Aucune voix arabe installée. Le texte sera lu avec la voix par défaut. <br>Pour une meilleure prononciation, installe une voix arabe dans les paramètres de ton système.';
+}
+function listVoices() {
+  const r = document.getElementById('audioTestResult');
+  const voices = window.speechSynthesis.getVoices();
+  if (!voices.length) { r.innerHTML = '⏳ Chargement des voix... Réessaie dans 1 seconde.'; window.speechSynthesis.onvoiceschanged = () => listVoices(); return; }
+  const arabic = voices.filter(v => v.lang && v.lang.startsWith('ar'));
+  r.innerHTML = arabic.length
+    ? '✅ Voix arabes disponibles :<br>' + arabic.map(v => '• ' + v.name + ' (' + v.lang + ')').join('<br>')
+    : '⚠️ Pas de voix arabe détectée (' + voices.length + ' voix au total). Audio fonctionnera quand même.';
+}
+
+function resetData() {
+  if (!confirm('Tout supprimer ? Action irréversible.')) return;
+  appData = { words:[], lessons:[], stats:{ quizzesTaken:0, correctAnswers:0, totalAnswers:0, streak:0, lastStudyDate:null, dailyWords:{}, activity:[] }, settings:{ dailyGoal:10 }, srs:{} };
+  saveData(); updateDashboard(); updateCategoryLists();
+  renderVocabulary(); renderLessons();
+  showToast('Données réinitialisées !');
+}
+</script>
+</body>
+</html>
