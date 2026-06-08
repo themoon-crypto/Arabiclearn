@@ -1,8 +1,0 @@
-﻿Fichier,Taille,Description
-**[index.html](sandbox:///mnt/agents/output/index.html)**,115 Ko,"App complète (120 mots, 3 leçons, tous les bugs corrigés)"
-**[manifest.json](sandbox:///mnt/agents/output/manifest.json)**,0.5 Ko,Config PWA
-**[netlify.toml](sandbox:///mnt/agents/output/netlify.toml)**,0.3 Ko,Config Netlify
-**[\_redirects](sandbox:///mnt/agents/output/_redirects)**,0.1 Ko,SPA routing
-**[sw.js](sandbox:///mnt/agents/output/sw.js)**,0.8 Ko,Service Worker offline
-**[icon-192.png](sandbox:///mnt/agents/output/icon-192.png)**,3 Ko,"Icône PWA (lettre arabe ""ع"")"
-**[icon-512.png](sandbox:///mnt/agents/output/icon-512.png)**,10 Ko,Icône PWA grande taille
