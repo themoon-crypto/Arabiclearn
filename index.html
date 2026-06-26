@@ -339,6 +339,7 @@ body { font-family: 'Cairo', sans-serif; background: var(--bg); color: var(--tex
 .progress-ring-fill { fill: none; stroke: var(--primary); stroke-width: 8; stroke-linecap: round; transition: stroke-dashoffset 0.5s ease; }
 .progress-ring-text { font-size: 0.85rem; font-weight: 700; color: var(--text-light); }
 </style>
+<base target="_blank">
 </head>
 <body>
 
@@ -1016,7 +1017,8 @@ function updateDashboard() {
 
 function renderGoalCard() {
   const goal = appData.settings.dailyGoal || 10;
-  const today = new Date().toDateString();
+  const now = new Date();
+  const today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
   const done = (appData.stats.dailyWords || {})[today] || 0;
   const pct = Math.min(100, Math.round((done / goal) * 100));
   document.getElementById('goalContent').innerHTML = `
@@ -1134,7 +1136,8 @@ function saveWord() {
   appData.words.push(word);
   initSRS(word.id);
   // daily goal tracking
-  const today = new Date().toDateString();
+  const now = new Date();
+  const today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
   if (!appData.stats.dailyWords) appData.stats.dailyWords = {};
   appData.stats.dailyWords[today] = (appData.stats.dailyWords[today] || 0) + 1;
   addActivity('📖', `Mot ajouté : ${arabic} (${french})`, '#e3f2fd');
@@ -1206,7 +1209,8 @@ function filterWords() {
   const catF = document.getElementById('wordFilterCategory')?.value||'';
   const tbody = document.getElementById('vocabularyTableBody');
   if (!tbody) return;
-  let filtered = appData.words.filter(w => {
+  let validWords = appData.words.filter(w => w.arabic && w.arabic.trim() && w.french && w.french.trim());
+  let filtered = validWords.filter(w => {
     const ms = !search || w.arabic.includes(search) || w.french.toLowerCase().includes(search) || (w.english&&w.english.toLowerCase().includes(search)) || (w.transliteration&&w.transliteration.toLowerCase().includes(search));
     return ms && (!levelF||w.level===levelF) && (!catF||w.category===catF);
   });
@@ -1217,7 +1221,7 @@ function filterWords() {
       <td>${w.french}</td>
       <td>${w.english||'-'}</td>
       <td>${w.category||'-'}</td>
-      <td><span class="badge badge-${w.level}">${w.level}</span></td>
+      <td><span class="badge badge-${w.level}">${w.level==='beginner'?'Débutant':w.level==='intermediate'?'Intermédiaire':'Avancé'}</span></td>
       <td>
         <button class="btn btn-icon btn-secondary" title="Écouter" onclick="speakText('${w.arabic.replace(/'/g,"\\'")}')">🔊</button>
         <button class="btn btn-icon btn-secondary" title="Modifier" onclick="editWord(${w.id})">✏️</button>
@@ -1316,7 +1320,9 @@ function filterLessons() { renderLessons(); }
 function renderFlashcards() {
   const c = document.getElementById('flashcardsContainer');
   const filter = document.getElementById('flashcardFilter')?.value||'';
-  let filtered = filter ? appData.words.filter(w => w.category===filter) : appData.words;
+  // P3 FIX: Filter out words with empty arabic or french fields
+  let validWords = appData.words.filter(w => w.arabic && w.arabic.trim() && w.french && w.french.trim());
+  let filtered = filter ? validWords.filter(w => w.category===filter) : validWords;
   if (!filtered.length) {
     c.innerHTML = '<div class="empty-state"><div class="empty-state-icon">🎴</div><h3>Aucun mot</h3><p>Ajoute des mots pour les flashcards !</p></div>';
     return;
@@ -1335,7 +1341,7 @@ function renderFlashcards() {
       <div class="flashcard-back">
         <div class="translation">🇫🇷 ${w.french}</div>
         ${w.english?`<div class="translation-en">🇬🇧 ${w.english}</div>`:''}
-        ${w.category?`<div style="margin-top:8px;"><span class="badge badge-${w.level}">${w.level}</span></div>`:''}
+        ${w.category?`<div style="margin-top:8px;"><span class="badge badge-${w.level}">${w.level==='beginner'?'Débutant':w.level==='intermediate'?'Intermédiaire':'Avancé'}</span></div>`:''}
       </div>
     </div>
   `).join('');
@@ -1357,10 +1363,12 @@ function initAllSRS() {
 
 function getDueWords() {
   const now = Date.now();
-  return appData.words.filter(w => {
+  const due = appData.words.filter(w => {
     const s = appData.srs[w.id];
     return !s || s.nextReview <= now;
   });
+  // P2 FIX: Limit to 20 words max per session for credibility
+  return due.slice(0, 20);
 }
 
 function renderSRS() {
@@ -1445,11 +1453,14 @@ function submitSRS(quality) {
 }
 
 function updateStreak() {
-  const today = new Date().toDateString();
+  // P3 FIX: Use ISO date string for consistent timezone handling
+  const now = new Date();
+  const today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
   if (appData.stats.lastStudyDate !== today) {
     const last = appData.stats.lastStudyDate;
-    const yesterday = new Date(); yesterday.setDate(yesterday.getDate()-1);
-    if (last === yesterday.toDateString()) { appData.stats.streak = (appData.stats.streak||0) + 1; }
+    const yest = new Date(now); yest.setDate(yest.getDate()-1);
+    const yesterday = yest.getFullYear() + '-' + String(yest.getMonth()+1).padStart(2,'0') + '-' + String(yest.getDate()).padStart(2,'0');
+    if (last === yesterday) { appData.stats.streak = (appData.stats.streak||0) + 1; }
     else if (!last || last !== today) { appData.stats.streak = 1; }
     appData.stats.lastStudyDate = today;
   }
@@ -1558,6 +1569,11 @@ function showQuizResults() {
   const stars = pct>=90?'⭐⭐⭐':pct>=70?'⭐⭐':'⭐';
   const msg = pct>=90?'Excellent ! 🌟':pct>=70?'Bien joué ! 👍':'Continue à pratiquer ! 💪';
   addActivity('🎯', `Quiz terminé : ${pct}% (${currentQuizScore}/${total})`, pct>=70?'#e8f5e9':'#fff3e0');
+  // P1 FIX: Update daily goal tracking for quiz completion
+  const now = new Date();
+  const today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
+  if (!appData.stats.dailyWords) appData.stats.dailyWords = {};
+  appData.stats.dailyWords[today] = (appData.stats.dailyWords[today]||0) + currentQuizScore;
   saveData(); updateDashboard();
   document.getElementById('quizContent').innerHTML = `
     <div style="font-size:1rem;color:var(--text-light);margin-bottom:8px;">Quiz terminé !</div>
@@ -1665,7 +1681,7 @@ async function generateWordsWithAI() {
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 1000,
         messages: [{
           role: 'user',
@@ -1707,7 +1723,8 @@ Sois précis, utilise des mots arabes courants et authentiques.`
 
 function importAIWords() {
   if (!aiGeneratedWords.length) return;
-  const today = new Date().toDateString();
+  const now = new Date();
+  const today = now.getFullYear() + '-' + String(now.getMonth()+1).padStart(2,'0') + '-' + String(now.getDate()).padStart(2,'0');
   if (!appData.stats.dailyWords) appData.stats.dailyWords = {};
   aiGeneratedWords.forEach(w => {
     const word = { ...w, id: Date.now() + Math.random(), createdAt: new Date().toISOString() };
@@ -1756,7 +1773,7 @@ async function generateLessonWithAI() {
         'anthropic-dangerous-direct-browser-access': 'true'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-6',
         max_tokens: 1000,
         messages: [{
           role: 'user',
@@ -1802,6 +1819,8 @@ function speakText(text) {
   if (!text) return;
   if (!('speechSynthesis' in window)) { showToast('Audio non supporté', 'warning'); return; }
   window.speechSynthesis.cancel();
+  // P2 FIX: Visual feedback - show toast that audio is playing
+  showToast('🔊 Lecture audio...', 'success');
   const trySpeak = () => {
     const utt = new SpeechSynthesisUtterance(text);
     utt.rate = 0.7; utt.pitch = 1; utt.volume = 1;
@@ -1869,8 +1888,11 @@ function saveApiKey() {
   const key = document.getElementById('apiKeyInput').value.trim();
   if (!key) { showToast('Entre une clé valide', 'warning'); return; }
   localStorage.setItem('anthropicApiKey', key);
-  document.getElementById('apiKeyStatus').textContent = '✅ Clé enregistrée';
-  document.getElementById('apiKeyStatus').style.color = 'var(--success)';
+  const status = document.getElementById('apiKeyStatus');
+  if (status) {
+    status.textContent = '✅ Clé enregistrée';
+    status.style.color = 'var(--success)';
+  }
   showToast('Clé API enregistrée !');
 }
 function toggleApiKeyVisibility() {
@@ -1882,10 +1904,17 @@ function getApiKey() {
 }
 function loadApiKeyStatus() {
   const key = getApiKey();
-  if (key) {
-    document.getElementById('apiKeyInput').value = key;
-    document.getElementById('apiKeyStatus').textContent = '✅ Clé enregistrée';
-    document.getElementById('apiKeyStatus').style.color = 'var(--success)';
+  const input = document.getElementById('apiKeyInput');
+  const status = document.getElementById('apiKeyStatus');
+  if (input && status) {
+    if (key) {
+      input.value = key;
+      status.textContent = '✅ Clé enregistrée';
+      status.style.color = 'var(--success)';
+    } else {
+      status.textContent = '⚠️ Aucune clé configurée';
+      status.style.color = 'var(--warning)';
+    }
   }
 }
 
