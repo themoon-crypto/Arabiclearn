@@ -1280,7 +1280,7 @@ function viewLesson(id) {
   document.getElementById('viewLessonBody').innerHTML = `
     <div style="margin-bottom:15px;">
       <span class="badge badge-${l.level}">${l.level}</span>
-      ${l.category?`<span class="badge" style="background:#e3f2fd;color:#1976d2;margin-left:6px;">${l.category}</span>`:''}
+      ${l.category ? '<span class="badge" style="background:#e3f2fd;color:#1976d2;margin-left:6px;">' + l.category + '</span>' : ''}
     </div>
     <div style="font-family:'Amiri',serif;font-size:1.35rem;line-height:2.1;background:rgba(26,95,74,0.04);padding:18px;border-radius:12px;margin-bottom:18px;direction:rtl;text-align:right;">${l.content.replace(/\n/g,'<br>')}</div>
     ${l.translationFr?`<div style="margin-bottom:14px;"><strong>🇫🇷 Français :</strong><p style="margin-top:7px;color:var(--text-light);line-height:1.6;font-size:0.92rem;">${l.translationFr.replace(/\n/g,'<br>')}</p></div>`:''}
@@ -1335,7 +1335,7 @@ function renderFlashcards() {
       </div>
       <div class="flashcard-front">
         <div class="arabic-word">${w.arabic}</div>
-        ${w.transliteration?`<div class="transliteration">${w.transliteration}</div>`:''}
+        ${w.transliteration ? '<div class="transliteration">' + w.transliteration + '</div>' : ''}
         <div style="margin-top:12px;color:var(--text-muted);font-size:0.78rem;">Cliquer pour voir</div>
       </div>
       <div class="flashcard-back">
@@ -1394,7 +1394,7 @@ function renderSRS() {
     <div class="card srs-card">
       <div style="color:var(--text-light);font-size:0.82rem;font-weight:700;margin-bottom:5px;">${due.length} mot(s) restant(s)</div>
       <div class="srs-word">${currentSRSWord.arabic}</div>
-      ${currentSRSWord.transliteration?`<div style="color:var(--text-light);font-size:0.9rem;font-style:italic;margin-bottom:12px;">${currentSRSWord.transliteration}</div>`:''}
+      ${currentSRSWord.transliteration ? '<div style="color:var(--text-light);font-size:0.9rem;font-style:italic;margin-bottom:12px;">' + currentSRSWord.transliteration + '</div>' : ''}
       <button class="btn btn-secondary srs-reveal-btn" onclick="revealSRS()">👁️ Voir la traduction</button>
       <div id="srsAnswer" class="hidden">
         <div style="font-size:1.4rem;font-weight:800;color:var(--primary);margin:15px 0 5px;">${currentSRSWord.french}</div>
