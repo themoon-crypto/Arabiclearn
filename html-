@@ -340,6 +340,7 @@ body { font-family: 'Cairo', sans-serif; background: var(--bg); color: var(--tex
 .progress-ring-text { font-size: 0.85rem; font-weight: 700; color: var(--text-light); }
 </style>
 <base target="_blank">
+<base target="_blank">
 </head>
 <body>
 
@@ -570,7 +571,7 @@ body { font-family: 'Cairo', sans-serif; background: var(--bg); color: var(--tex
     <div class="card">
       <h3 class="card-title">ℹ️ À propos</h3>
       <p style="color:var(--text-light);font-size:0.85rem;line-height:1.8;">
-        <strong>ArabicLearn v2.0</strong> — Application d'apprentissage de l'arabe.<br>
+        <strong>ArabicLearn v2.1</strong> — Application d'apprentissage de l'arabe.<br>
         Fonctionnalités : Vocabulaire, Leçons, Flashcards, SRS, Quiz, Stats, IA, Mode sombre.<br>
         Données stockées localement sur ton appareil.
       </p>
@@ -939,8 +940,10 @@ function loadData() {
   if (saved) {
     try {
       const parsed = JSON.parse(saved);
-      appData = { ...appData, ...parsed };
-    } catch(e) {}
+      if (parsed && typeof parsed === 'object' && Array.isArray(parsed.words)) {
+        appData = { ...appData, ...parsed };
+      }
+    } catch(e) { console.error('loadData error:', e); }
   }
   // Toujours forcer les mots démo si aucun mot présent
   if (!appData.words || appData.words.length === 0) {
@@ -1007,6 +1010,9 @@ function closeModal(id) { document.getElementById(id).classList.remove('show'); 
 
 // ==================== DASHBOARD ====================
 function updateDashboard() {
+  if (!appData.stats) appData.stats = { quizzesTaken: 0, correctAnswers: 0, totalAnswers: 0, streak: 0, lastStudyDate: null, dailyWords: {}, activity: [] };
+  if (!appData.words) appData.words = [];
+  if (!appData.lessons) appData.lessons = [];
   document.getElementById('statWords').textContent = appData.words.length;
   document.getElementById('statLessons').textContent = appData.lessons.length;
   document.getElementById('statQuizzes').textContent = appData.stats.quizzesTaken;
@@ -1885,7 +1891,7 @@ function listVoices() {
 function saveApiKey() {
   const key = document.getElementById('apiKeyInput').value.trim();
   if (!key) { showToast('Entre une clé valide', 'warning'); return; }
-  localStorage.setItem('anthropicApiKey', key);
+  localStorage.setItem('arabicLearnApiKey', key);
   const status = document.getElementById('apiKeyStatus');
   if (status) {
     status.textContent = '✅ Clé enregistrée';
@@ -1898,7 +1904,7 @@ function toggleApiKeyVisibility() {
   inp.type = inp.type === 'password' ? 'text' : 'password';
 }
 function getApiKey() {
-  return localStorage.getItem('anthropicApiKey') || '';
+  return localStorage.getItem('arabicLearnApiKey') || '';
 }
 function loadApiKeyStatus() {
   const key = getApiKey();
